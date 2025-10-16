@@ -1,0 +1,8 @@
+# Bu dosya, Netlify'a sitenizi nasıl build edip yayınlayacağını söyler.
+
+[build]
+  # Build sırasında çalıştırılacak komut. build.mjs script'ini çalıştırır.
+  command = "node build.mjs"
+  
+  # Build sonrası yayınlanacak klasör.
+  publish = "dist"
