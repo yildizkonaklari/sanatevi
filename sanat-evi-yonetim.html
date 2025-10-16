@@ -1410,27 +1410,36 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            if (e.target.id === 'cancel-modal-btn' || e.target.classList.contains('modal-backdrop')) { 
+            if (e.target.classList.contains('modal-backdrop')) {
+                hideModal();
+            }
+        });
+
+        modalContent.addEventListener('click', e => {
+            const target = e.target;
+
+            if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
                 hideModal();
                 return;
             }
-
-            const studentId = e.target.dataset.id;
-            if (e.target.id === 'record-attendance-geldi') { handleAttendanceUpdate(studentId, 'geldi'); }
-            if (e.target.id === 'record-attendance-gelmedi') { handleAttendanceUpdate(studentId, 'gelmedi'); }
-            if (e.target.id === 'record-attendance-telafi-btn') { document.getElementById('telafi-form').classList.toggle('hidden'); }
             
-            if (e.target.closest('#toggle-student-status-btn')) {
-                handleStudentStatusToggle(e.target.closest('#toggle-student-status-btn').dataset.id);
+            const studentId = target.dataset.id || target.closest('[data-id]')?.dataset.id;
+            
+            if (target.id === 'record-attendance-geldi') { handleAttendanceUpdate(studentId, 'geldi'); }
+            if (target.id === 'record-attendance-gelmedi') { handleAttendanceUpdate(studentId, 'gelmedi'); }
+            if (target.id === 'record-attendance-telafi-btn') { document.getElementById('telafi-form').classList.toggle('hidden'); }
+            
+            if (target.closest('#toggle-student-status-btn')) {
+                handleStudentStatusToggle(target.closest('#toggle-student-status-btn').dataset.id);
             }
-            if (e.target.closest('#send-whatsapp-btn')) {
-                sendViaWhatsApp(e.target.closest('#send-whatsapp-btn').dataset.id);
+            if (target.closest('#send-whatsapp-btn')) {
+                sendViaWhatsApp(target.closest('#send-whatsapp-btn').dataset.id);
             }
-            if (e.target.closest('#send-email-btn')) {
-                sendViaEmail(e.target.closest('#send-email-btn').dataset.id);
+            if (target.closest('#send-email-btn')) {
+                sendViaEmail(target.closest('#send-email-btn').dataset.id);
             }
-            if (e.target.closest('.delete-attendance-btn')) {
-                const button = e.target.closest('.delete-attendance-btn');
+            if (target.closest('.delete-attendance-btn')) {
+                const button = target.closest('.delete-attendance-btn');
                 const studentIdToDelete = button.dataset.studentId;
                 const attendanceIndex = parseInt(button.dataset.attendanceIndex, 10);
                 handleAttendanceDelete(studentIdToDelete, attendanceIndex);
