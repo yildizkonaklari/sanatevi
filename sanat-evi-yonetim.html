@@ -323,10 +323,10 @@
     </div>
     
     <!-- Modal (Dinamik İçerik için) -->
-    <div id="modal" class="fixed inset-0 z-40 hidden">
+    <div id="modal" class="fixed inset-0 z-40 hidden overflow-y-auto">
         <div class="modal-backdrop fixed inset-0"></div>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div id="modal-content" class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-screen flex flex-col">
+        <div class="flex items-start justify-center min-h-screen p-4 pt-10 text-center">
+            <div id="modal-content" class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-lg text-left transform transition-all">
                 <!-- Modal içeriği JS ile doldurulacak -->
             </div>
         </div>
@@ -772,10 +772,10 @@
             let dayOptions = daysOfWeek.map(d => `<option value="${d}" ${student.day === d ? 'selected' : ''}>${d}</option>`).join('');
             
             return `
-                <div class="flex-shrink-0">
+                <div>
                     <h2 class="text-2xl font-bold mb-6">${title}</h2>
                 </div>
-                <div class="flex-1 overflow-y-auto pr-2">
+                <div>
                     <form id="student-form" data-id="${student.id || ''}">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" name="firstName" placeholder="Ad" value="${student.firstName || ''}" required class="p-2 border rounded">
@@ -805,7 +805,7 @@
                         <p id="form-error" class="text-red-600 text-sm mt-2 text-center h-4"></p>
                     </form>
                 </div>
-                <div class="flex justify-end mt-6 gap-4 flex-shrink-0">
+                <div class="flex justify-end mt-6 gap-4">
                     <button type="button" id="cancel-modal-btn" class="bg-gray-300 px-4 py-2 rounded">İptal</button>
                     <button type="submit" form="student-form" class="bg-indigo-600 text-white px-4 py-2 rounded">${isEditing ? 'Güncelle' : 'Kaydet'}</button>
                 </div>
@@ -844,11 +844,11 @@
             }).join('');
 
             return `
-                <div class="flex-shrink-0">
+                <div>
                     <h2 class="text-2xl font-bold mb-2">Ödeme İşlemleri</h2>
                     <p class="mb-4 text-gray-700">${student.firstName} ${student.lastName} - ${course ? course.name : ''}</p>
                 </div>
-                <div class="flex-1 overflow-y-auto pr-2">
+                <div>
                     <div class="bg-gray-100 p-4 rounded-lg mb-4">
                         <div class="flex justify-between"><span>Güncel Bakiye:</span> <strong class="${balance < 0 ? 'text-red-600' : 'text-green-600'}">${balance.toFixed(2)} ₺</strong></div>
                     </div>
@@ -866,7 +866,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="text-right mt-6 flex-shrink-0">
+                <div class="text-right mt-6">
                     <button type="button" id="cancel-modal-btn" class="bg-gray-300 px-4 py-2 rounded">Kapat</button>
                 </div>
             `;
@@ -896,7 +896,7 @@
             }).join('') || '<p class="text-gray-500 text-sm">Devam kaydı bulunmuyor.</p>';
 
             return `
-                 <div class="flex-shrink-0">
+                 <div>
                     <div class="flex justify-between items-start mb-2">
                         <h2 class="text-2xl font-bold">${student.firstName} ${student.lastName}</h2>
                         <div class="flex items-center gap-2 cursor-pointer" id="toggle-student-status-btn" data-id="${student.id}">
@@ -910,7 +910,7 @@
                     <p class="mb-4 text-gray-700">Dönemdeki Ders: ${sessionCount % student.lessonsPerFee} / ${student.lessonsPerFee}</p>
                 </div>
 
-                <div class="flex-1 overflow-y-auto pr-2">
+                <div>
                     <div class="bg-gray-100 p-4 rounded-lg mb-4 flex justify-between">
                         <span>Güncel Bakiye:</span> <strong class="${balance < 0 ? 'text-red-600' : 'text-green-600'}">${balance.toFixed(2)} ₺</strong>
                     </div>
@@ -939,7 +939,7 @@
                     <ul>${attendanceHistory}</ul>
                 </div>
                 
-                <div class="text-right mt-6 flex-shrink-0">
+                <div class="text-right mt-6">
                     <button type="button" id="cancel-modal-btn" class="bg-gray-300 px-4 py-2 rounded">Kapat</button>
                 </div>
             `;
@@ -1410,13 +1410,15 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-backdrop')) {
+            // SADECE modal'ın arkaplanına tıklandığında kapat
+            if (e.target.id === 'modal') {
                 hideModal();
             }
         });
 
         modalContent.addEventListener('click', e => {
             const target = e.target;
+             e.stopPropagation(); // İçeriye yapılan tıklamaların dışarıya yayılmasını engelle
 
             if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
                 hideModal();
@@ -1543,4 +1545,3 @@
 </script>
 </body>
 </html>
-
