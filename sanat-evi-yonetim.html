@@ -869,7 +869,7 @@
             const sessionCount = (student.attendance || []).filter(a => a.status === 'geldi' || a.status === 'gelmedi').length;
             const status = student.status === 'active';
 
-            let attendanceHistory = (student.attendance || []).map(a => {
+            let attendanceHistory = (student.attendance || []).map((a, index) => {
                 let statusText = '';
                 if (a.status === 'geldi') {
                     statusText = 'Geldi';
@@ -879,7 +879,12 @@
                     statusText = `Telafi -> ${new Date(a.date).toLocaleDateString('tr-TR')} ${a.time}`;
                 }
                 const originalDate = a.originalDate ? new Date(a.originalDate).toLocaleDateString('tr-TR') : new Date(a.date).toLocaleDateString('tr-TR');
-                return `<li class="flex justify-between py-1 border-b text-sm"><span>${originalDate}</span><span>${statusText}</span></li>`;
+                return `<li class="flex justify-between items-center py-1 border-b text-sm">
+                            <span>${originalDate}: ${statusText}</span>
+                            <button class="delete-attendance-btn text-red-500 hover:text-red-700 p-1" data-student-id="${student.id}" data-attendance-index="${index}" title="Bu kaydı sil">
+                                <i class="fas fa-trash-alt fa-xs"></i>
+                            </button>
+                        </li>`;
             }).join('') || '<p class="text-gray-500 text-sm">Devam kaydı bulunmuyor.</p>';
 
             return `
@@ -1202,6 +1207,43 @@
                 hideModal();
             }
         }
+
+        async function handleAttendanceDelete(studentId, attendanceIndex) {
+            const student = state.students.find(s => s.id == studentId);
+            if (!student) return;
+
+            const attendanceToDelete = (student.attendance || [])[attendanceIndex];
+            if (!attendanceToDelete) return;
+
+            const wasChargeable = attendanceToDelete.status === 'geldi' || attendanceToDelete.status === 'gelmedi';
+            const sessionCountBeforeDelete = (student.attendance || []).filter(a => a.status === 'geldi' || a.status === 'gelmedi').length;
+
+            const newAttendance = [...(student.attendance || [])];
+            newAttendance.splice(attendanceIndex, 1);
+            
+            let newPayments = [...(student.payments || [])];
+
+            if (wasChargeable && sessionCountBeforeDelete > 0 && student.lessonsPerFee > 0 && sessionCountBeforeDelete % student.lessonsPerFee === 0) {
+                const lastRenewalIndex = newPayments.map(p => p.type).lastIndexOf('renewal');
+                if (lastRenewalIndex > -1) {
+                    newPayments.splice(lastRenewalIndex, 1);
+                }
+            }
+
+            loadingOverlay.classList.remove('hidden');
+            try {
+                await db.collection('students').doc(studentId).update({
+                    attendance: newAttendance,
+                    payments: newPayments
+                });
+                const updatedStudent = { ...student, attendance: newAttendance, payments: newPayments };
+                showModal(getStudentStatusModalHTML(updatedStudent));
+            } catch (error) {
+                console.error("Devam kaydı silinemedi: ", error);
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
         
         async function handleStudentStatusToggle(studentId) {
             const student = state.students.find(s => s.id == studentId);
@@ -1371,6 +1413,12 @@
             if (e.target.closest('#send-email-btn')) {
                 sendViaEmail(e.target.closest('#send-email-btn').dataset.id);
             }
+            if (e.target.closest('.delete-attendance-btn')) {
+                const button = e.target.closest('.delete-attendance-btn');
+                const studentIdToDelete = button.dataset.studentId;
+                const attendanceIndex = parseInt(button.dataset.attendanceIndex, 10);
+                handleAttendanceDelete(studentIdToDelete, attendanceIndex);
+            }
         });
         
         modal.addEventListener('submit', (e) => {
@@ -1470,3 +1518,4 @@
 </script>
 </body>
 </html>
+
