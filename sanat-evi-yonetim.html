@@ -139,6 +139,9 @@
                 <a href="#calendar" class="nav-link flex items-center px-4 py-2 rounded-md hover:bg-gray-700">
                     <i class="fas fa-calendar-alt w-6 text-center sidebar-icon"></i><span class="ml-3">Ders Programı</span>
                 </a>
+                 <a href="#how-to-use" class="nav-link flex items-center px-4 py-2 rounded-md hover:bg-gray-700">
+                    <i class="fas fa-question-circle w-6 text-center sidebar-icon"></i><span class="ml-3">Nasıl Kullanılır?</span>
+                </a>
             </nav>
             <div class="p-4 border-t border-gray-700">
                 <button id="logout-button" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
@@ -320,6 +323,66 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Sayfa: Nasıl Kullanılır? -->
+                <div id="how-to-use-page" class="page">
+                    <div class="bg-white p-8 rounded-lg shadow-md">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">Kullanım Kılavuzu</h1>
+                        
+                        <section class="mb-8">
+                            <h2 class="text-2xl font-bold text-gray-700 mb-4">1. Öğrenci Yönetimi</h2>
+                            <p class="mb-4">Bu sayfa, tüm öğrenci kayıtlarınızı yönettiğiniz ana merkezdir.</p>
+                            
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Yeni Öğrenci Ekleme</h3>
+                            <ol class="list-decimal list-inside space-y-2 mb-4">
+                                <li>Sağ üstteki <strong class="text-indigo-600">"Yeni Öğrenci Ekle"</strong> butonuna tıklayın.</li>
+                                <li>Açılan formda öğrencinin bilgilerini doldurun:
+                                    <ul class="list-disc list-inside ml-4 mt-2 space-y-1">
+                                        <li><strong>Ad, Soyad, İletişim Bilgileri:</strong> Temel öğrenci bilgilerini girin.</li>
+                                        <li><strong>Kurs Seçimi:</strong> Öğrencinin kayıt olacağı kursu listeden seçin.</li>
+                                        <li><strong>Dönem Ücreti ve Ders Sayısı:</strong> Öğrenciden alacağınız ücreti ve bu ücretin kaç dersi kapsadığını belirtin (Örn: 400 TL, 4 ders).</li>
+                                        <li><strong>Ders Günü ve Saati:</strong> Öğrencinin sabit ders programını belirleyin.</li>
+                                    </ul>
+                                </li>
+                                <li><strong class="text-indigo-600">"Kaydet"</strong> butonuna basın. Kayıtla birlikte öğrencinin bakiyesine belirlediğiniz dönem ücreti borç olarak yansıtılacaktır.</li>
+                            </ol>
+
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Öğrenci Bilgilerini Düzenleme ve İşlemler</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>İsme Tıklama (Devam İşlemleri):</strong> Bir öğrencinin ismine tıkladığınızda "Devam Durumu" penceresi açılır. Buradan <strong class="text-green-600">Geldi/Gelmedi</strong>, <strong class="text-yellow-600">Telafi</strong>, <strong class="text-blue-600">Aktif/Pasif</strong> durumu ve devam kaydı silme gibi işlemleri yapabilirsiniz.</li>
+                                <li><strong>İşlem Butonları:</strong> Her öğrenci satırının sonunda bulunan ikonlarla öğrenciyi düzenleyebilir, silebilir, bilgilerini WhatsApp/E-posta ile gönderebilir veya yazdırabilirsiniz.</li>
+                            </ul>
+                        </section>
+
+                        <section class="mb-8">
+                            <h2 class="text-2xl font-bold text-gray-700 mb-4">2. Kurs Yönetimi</h2>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Yeni Kurs Ekleme:</strong> Sağ üstteki butona tıklayarak kursun adını, eğitmenini ve ders kontenjanını (maksimum öğrenci sayısı) girin.</li>
+                                <li><strong>Düzenleme ve Silme:</strong> Listeden bir kursu güncelleyebilir veya silebilirsiniz. <strong class="text-red-600">Not:</strong> Bir kursu silmek, o kursa kayıtlı tüm öğrencileri de kalıcı olarak silecektir.</li>
+                            </ul>
+                        </section>
+
+                        <section class="mb-8">
+                            <h2 class="text-2xl font-bold text-gray-700 mb-4">3. Ödeme Takibi</h2>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Filtreleme:</strong> Öğrencileri isme, kursa veya ödeme durumuna ("Borçlu" / "Borcu Yok") göre listeleyebilirsiniz.</li>
+                                <li><strong>Ödeme Ekleme:</strong> Bir öğrencinin satırındaki <strong class="text-yellow-600">"Ödeme Ekle"</strong> butonuna tıklayın. Açılan pencerede alınan ödeme tutarını girip kaydedin. Tutar, öğrencinin bakiyesinden otomatik olarak düşülecektir.</li>
+                             </ul>
+                        </section>
+
+                        <section>
+                            <h2 class="text-2xl font-bold text-gray-700 mb-4">4. Ders Programı (Takvim)</h2>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Haftalık Gezinme:</strong> Takvimin üstündeki okları ve "Bugün" butonunu kullanarak haftalar arasında gezinebilirsiniz.</li>
+                                <li><strong>Filtreleme:</strong> Sağ üstteki seçim kutusundan bir kurs seçerek sadece o kursa ait dersleri takvimde görebilirsiniz.</li>
+                                <li><strong>Hızlı İşlem:</strong> Takvimdeki bir derse tıkladığınızda, ilgili öğrencinin devam durumunu ("Geldi", "Gelmedi") işleyebileceğiniz pencere açılır.</li>
+                            </ul>
+                        </section>
+
+                    </div>
+                </div>
+
+
             </main>
         </div>
     </div>
@@ -466,6 +529,7 @@
                 case 'courses': renderCoursesPage(); break;
                 case 'payments': renderPaymentsPage(); break;
                 case 'calendar': renderCalendar(); break;
+                case 'how-to-use': /* Bu sayfa statik olduğu için özel bir render fonksiyonu yok */ break;
             }
         }
         
@@ -1466,22 +1530,16 @@
                 hideModal();
             }
         });
-
-        document.body.addEventListener('click', e => {
-            if (!modal.classList.contains('hidden') && !modalContent.contains(e.target)) {
-                 if (e.target.closest('.student-name-link') || e.target.closest('.edit-student-btn') || e.target.closest('.add-payment-btn') || e.target.closest('.send-student-info-btn') || e.target.closest('.calendar-event') || e.target.closest('#add-student-btn') || e.target.closest('#add-course-btn')) {
-                    // Bu butonlar yeni modal açtığı için mevcut modalı kapatma
-                } else if (!e.target.closest('#modal-content')) {
-                     // hideModal(); // Bu satır mobil sorununa yol açabilir, şimdilik yorumda
-                }
+        
+        modal.addEventListener('click', e => {
+            if (e.target.id === 'modal') {
+                 hideModal();
             }
         });
 
-
         modalContent.addEventListener('click', e => {
             const target = e.target;
-             e.stopPropagation();
-
+            
             if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
                 hideModal();
                 return;
@@ -1604,3 +1662,4 @@
 </script>
 </body>
 </html>
+
