@@ -318,7 +318,7 @@
                        </div>
                     </div>
                     <div class="bg-white p-2 rounded-lg shadow-md overflow-x-auto">
-                        <div id="calendar-grid" class="grid">
+                        <div id="calendar-grid" class="grid" style="min-width: 800px;">
                             <!-- Saatler ve Günler JS ile doldurulacak -->
                         </div>
                     </div>
@@ -741,10 +741,9 @@
             const grid = document.getElementById('calendar-grid');
             const weekRangeDisplay = document.getElementById('week-range-display');
             grid.innerHTML = '';
-
-            // Grid sütunlarını ekran boyutuna göre ayarla
-            grid.style.minWidth = '800px';
-
+            
+            grid.style.gridTemplateColumns = '60px repeat(7, 1fr)';
+            
             const weekInfo = getWeekInfo(viewDate);
             const { weekStart, weekEnd, dates } = weekInfo;
             const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
@@ -756,9 +755,9 @@
             weekRangeDisplay.textContent = `${weekStart.toLocaleDateString('tr-TR', options)} - ${weekEnd.toLocaleDateString('tr-TR', options)} ${weekStart.getFullYear()}`;
 
             // Header
-            grid.innerHTML += `<div class="font-semibold p-1 text-center text-xs"></div>`;
+            grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm"></div>`;
             dates.forEach((date, i) => {
-                grid.innerHTML += `<div class="font-semibold p-1 text-center text-xs">${dayNames[i]}<br>${date.getDate()}</div>`;
+                grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm">${dayNames[i]}<br>${date.getDate()}</div>`;
             });
 
             const activeStudents = state.students.filter(s => s.status === 'active');
@@ -770,7 +769,7 @@
             });
 
             timeSlots.forEach(time => {
-                grid.innerHTML += `<div class="font-semibold p-1 text-center text-xs flex items-center justify-center">${time}</div>`;
+                grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm flex items-center justify-center">${time}</div>`;
                 dates.forEach((date, i) => {
                     const day = fullDayNames[i];
                     
@@ -793,7 +792,7 @@
                     studentsInSlot.forEach(student => {
                         const course = state.courses.find(c => c.id === student.courseId);
                         if (course) {
-                            slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-[10px] leading-tight border border-blue-200" data-student-id="${student.id}">
+                            slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-xs border border-blue-200" data-student-id="${student.id}">
                                                 <p class="font-bold">${course.name}</p>
                                                 <p>${student.firstName}</p>
                                              </div>`;
@@ -805,7 +804,7 @@
                          if (student) {
                              const course = state.courses.find(c => c.id === student.courseId);
                              if (course) {
-                                 slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-[10px] leading-tight border border-yellow-300" data-student-id="${student.id}">
+                                 slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-xs border border-yellow-300" data-student-id="${student.id}">
                                                     <p class="font-bold">${course.name} (Telafi)</p>
                                                     <p>${student.firstName}</p>
                                                  </div>`;
@@ -1522,35 +1521,51 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            if (e.target.id === 'modal') {
+            if (e.target.classList.contains('modal-backdrop')) {
                 hideModal();
             }
         });
+        
+        document.body.addEventListener('click', e => {
+            if (!modal.classList.contains('hidden')) {
+                 if (!modalContent.contains(e.target)) {
+                    if (!e.target.closest('button, a')) {
+                       hideModal();
+                    }
+                 }
+            }
+        });
+
 
         modalContent.addEventListener('click', e => {
             const target = e.target;
 
             if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
+                e.stopPropagation();
                 hideModal();
                 return;
             }
             
             const studentId = target.dataset.id || target.closest('[data-id]')?.dataset.id;
             
-            if (target.id === 'record-attendance-geldi') { handleAttendanceUpdate(studentId, 'geldi'); }
-            if (target.id === 'record-attendance-gelmedi') { handleAttendanceUpdate(studentId, 'gelmedi'); }
-            if (target.id === 'record-attendance-telafi-btn') { document.getElementById('telafi-form').classList.toggle('hidden'); }
+            if (target.id === 'record-attendance-geldi') { e.stopPropagation(); handleAttendanceUpdate(studentId, 'geldi'); }
+            if (target.id === 'record-attendance-gelmedi') { e.stopPropagation(); handleAttendanceUpdate(studentId, 'gelmedi'); }
+            if (target.id === 'record-attendance-telafi-btn') { e.stopPropagation(); document.getElementById('telafi-form').classList.toggle('hidden'); }
             
             if (target.closest('#toggle-student-status-btn')) {
+                e.stopPropagation();
                 handleStudentStatusToggle(target.closest('#toggle-student-status-btn').dataset.id);
             }
             if (target.closest('#send-whatsapp-btn')) {
+                e.stopPropagation();
                 sendViaWhatsApp(target.closest('#send-whatsapp-btn').dataset.id);
             }
             if (target.closest('#send-email-btn')) {
+                e.stopPropagation();
                 sendViaEmail(target.closest('#send-email-btn').dataset.id);
             }
             if (target.closest('.delete-attendance-btn')) {
+                e.stopPropagation();
                 const button = target.closest('.delete-attendance-btn');
                 const studentIdToDelete = button.dataset.studentId;
                 const attendanceIndex = parseInt(button.dataset.attendanceIndex, 10);
@@ -1560,6 +1575,7 @@
         
         modalContent.addEventListener('submit', (e) => {
             e.preventDefault(); 
+            e.stopPropagation();
             
             if (e.target.id === 'telafi-form') {
                 const studentId = e.target.querySelector('button').dataset.id;
