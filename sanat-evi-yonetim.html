@@ -313,7 +313,7 @@
                        </div>
                     </div>
                     <div class="bg-white p-2 rounded-lg shadow-md">
-                        <div id="calendar-grid" class="grid" style="grid-template-columns: 60px repeat(7, 1fr);">
+                        <div id="calendar-grid" class="grid">
                             <!-- Saatler ve Günler JS ile doldurulacak -->
                         </div>
                     </div>
@@ -676,6 +676,14 @@
             const weekRangeDisplay = document.getElementById('week-range-display');
             grid.innerHTML = '';
 
+            // Grid sütunlarını ekran boyutuna göre ayarla
+            if (window.innerWidth < 768) {
+                grid.style.gridTemplateColumns = '40px repeat(7, 1fr)';
+            } else {
+                grid.style.gridTemplateColumns = '60px repeat(7, 1fr)';
+            }
+
+
             const weekInfo = getWeekInfo(viewDate);
             const { weekStart, weekEnd, dates } = weekInfo;
             const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
@@ -687,9 +695,9 @@
             weekRangeDisplay.textContent = `${weekStart.toLocaleDateString('tr-TR', options)} - ${weekEnd.toLocaleDateString('tr-TR', options)} ${weekStart.getFullYear()}`;
 
             // Header
-            grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm"></div>`;
+            grid.innerHTML += `<div class="font-semibold p-1 text-center text-xs"></div>`;
             dates.forEach((date, i) => {
-                grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm">${dayNames[i]}<br>${date.getDate()}</div>`;
+                grid.innerHTML += `<div class="font-semibold p-1 text-center text-xs">${dayNames[i]}<br>${date.getDate()}</div>`;
             });
 
             const activeStudents = state.students.filter(s => s.status === 'active');
@@ -701,7 +709,7 @@
             });
 
             timeSlots.forEach(time => {
-                grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm">${time}</div>`;
+                grid.innerHTML += `<div class="font-semibold p-1 text-center text-xs flex items-center justify-center">${time}</div>`;
                 dates.forEach((date, i) => {
                     const day = fullDayNames[i];
                     
@@ -724,7 +732,7 @@
                     studentsInSlot.forEach(student => {
                         const course = state.courses.find(c => c.id === student.courseId);
                         if (course) {
-                            slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-xs border border-blue-200" data-student-id="${student.id}">
+                            slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-[10px] leading-tight border border-blue-200" data-student-id="${student.id}">
                                                 <p class="font-bold">${course.name}</p>
                                                 <p>${student.firstName}</p>
                                              </div>`;
@@ -736,7 +744,7 @@
                          if (student) {
                              const course = state.courses.find(c => c.id === student.courseId);
                              if (course) {
-                                 slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-xs border border-yellow-300" data-student-id="${student.id}">
+                                 slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-[10px] leading-tight border border-yellow-300" data-student-id="${student.id}">
                                                     <p class="font-bold">${course.name} (Telafi)</p>
                                                     <p>${student.firstName}</p>
                                                  </div>`;
@@ -1410,7 +1418,7 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            if (e.target.id === 'modal') {
+            if (e.target.classList.contains('modal-backdrop')) {
                 hideModal();
             }
         });
@@ -1448,7 +1456,7 @@
         });
         
         modal.addEventListener('submit', (e) => {
-            e.preventDefault(); // Her zaman form gönderimini engelle
+            e.preventDefault(); 
 
             if (e.target.id === 'telafi-form') {
                 const studentId = e.target.querySelector('button').dataset.id;
@@ -1457,7 +1465,7 @@
                 const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
                 const dayName = days[new Date(date).getUTCDay()];
                 const errorP = document.getElementById('telafi-form-error');
-                errorP.textContent = ''; // Clear previous errors
+                errorP.textContent = ''; 
 
                 if (date && time) {
                     const student = state.students.find(s => s.id == studentId);
@@ -1466,7 +1474,6 @@
                     const course = state.courses.find(c => c.id === student.courseId);
                     if (!course) return;
 
-                    // O saatteki normal dersi olan öğrencileri say
                     const regularStudentsInSlot = state.students.filter(s =>
                         s.status === 'active' &&
                         s.courseId === student.courseId &&
@@ -1474,7 +1481,6 @@
                         s.time === time
                     ).length;
 
-                    // O saate atanmış diğer telafileri say
                     const makeupsInSlot = state.students.flatMap(s => s.attendance || [])
                         .filter(a => {
                             const makeupStudent = state.students.find(st => st.id == a.studentId);
@@ -1489,26 +1495,21 @@
 
                     if (totalInSlot >= course.quota) {
                         errorP.textContent = `Bu saat dolu! (Kontenjan: ${course.quota})`;
-                        return; // Kaydı durdur
+                        return;
                     }
 
                     handleAttendanceUpdate(studentId, 'telafi', { date, day: dayName, time });
                 }
-            } else if (e.target.id === 'student-form' || e.target.id === 'course-form' || e.target.id === 'payment-form') {
-                 e.target.closest('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            } else if (e.target.id === 'student-form') {
+                handleStudentFormSubmit(e);
+            } else if (e.target.id === 'course-form') {
+                handleCourseFormSubmit(e);
+            } else if (e.target.id === 'payment-form') {
+                handlePaymentFormSubmit(e);
             }
         });
 
-
-        document.body.addEventListener('submit', (e) => {
-            if(e.target.closest('#modal-content')) return; // Modal içindeki submit'i burada tekrar yakalama
-            if (e.target.id === 'student-form') handleStudentFormSubmit(e);
-            if (e.target.id === 'course-form') handleCourseFormSubmit(e);
-            if (e.target.id === 'payment-form') handlePaymentFormSubmit(e);
-        });
-
         document.querySelector('main').addEventListener('click', handleTableClicks);
-        
         
         // --- AUTHENTICATION ---
         authForm.addEventListener('submit', (e) => {
@@ -1548,4 +1549,3 @@
 </script>
 </body>
 </html>
-
