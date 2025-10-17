@@ -754,7 +754,7 @@
             const { weekStart, weekEnd, dates } = weekInfo;
             const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
             const fullDayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-            const timeSlots = Array.from({ length: 10 }, (_, i) => `${String(i + 9).padStart(2, '0')}:00`);
+            const timeSlots = Array.from({ length: 13 }, (_, i) => `${String(i + 9).padStart(2, '0')}:00`);
             const filterCourseId = document.getElementById('calendar-course-filter').value;
 
             const options = { month: 'short', day: 'numeric' };
@@ -1531,11 +1531,16 @@
             }
         });
         
-        modal.addEventListener('click', e => {
-            if (e.target.id === 'modal') {
-                 hideModal();
+        document.body.addEventListener('click', e => {
+            if (!modal.classList.contains('hidden')) {
+                 if (!modalContent.contains(e.target)) {
+                    if (!e.target.closest('button, a')) {
+                       hideModal();
+                    }
+                 }
             }
         });
+
 
         modalContent.addEventListener('click', e => {
             const target = e.target;
