@@ -927,9 +927,9 @@
 
                     <form id="telafi-form" class="hidden mt-4 bg-gray-50 p-4 rounded">
                          <h4 class="font-semibold mb-2">Telafi Dersi Planla</h4>
-                         <div class="grid grid-cols-2 gap-4">
-                             <input type="date" name="telafiDate" required class="p-2 border rounded">
-                             <input type="time" name="telafiTime" step="3600" required class="p-2 border rounded">
+                         <div class="flex flex-col sm:flex-row gap-4">
+                             <input type="date" name="telafiDate" required class="p-2 border rounded w-full">
+                             <input type="time" name="telafiTime" step="3600" required class="p-2 border rounded w-full">
                          </div>
                          <p id="telafi-form-error" class="text-red-600 text-sm mt-2 text-center h-4"></p>
                          <button type="submit" data-id="${student.id}" class="w-full mt-2 bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Telafiyi Kaydet</button>
@@ -1410,7 +1410,6 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            // SADECE modal'ın arkaplanına tıklandığında kapat
             if (e.target.id === 'modal') {
                 hideModal();
             }
@@ -1418,7 +1417,7 @@
 
         modalContent.addEventListener('click', e => {
             const target = e.target;
-             e.stopPropagation(); // İçeriye yapılan tıklamaların dışarıya yayılmasını engelle
+             e.stopPropagation();
 
             if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
                 hideModal();
@@ -1449,8 +1448,9 @@
         });
         
         modal.addEventListener('submit', (e) => {
+            e.preventDefault(); // Her zaman form gönderimini engelle
+
             if (e.target.id === 'telafi-form') {
-                e.preventDefault();
                 const studentId = e.target.querySelector('button').dataset.id;
                 const date = e.target.elements.telafiDate.value;
                 const time = e.target.elements.telafiTime.value;
@@ -1494,11 +1494,14 @@
 
                     handleAttendanceUpdate(studentId, 'telafi', { date, day: dayName, time });
                 }
+            } else if (e.target.id === 'student-form' || e.target.id === 'course-form' || e.target.id === 'payment-form') {
+                 e.target.closest('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
             }
         });
 
 
         document.body.addEventListener('submit', (e) => {
+            if(e.target.closest('#modal-content')) return; // Modal içindeki submit'i burada tekrar yakalama
             if (e.target.id === 'student-form') handleStudentFormSubmit(e);
             if (e.target.id === 'course-form') handleCourseFormSubmit(e);
             if (e.target.id === 'payment-form') handlePaymentFormSubmit(e);
@@ -1545,3 +1548,4 @@
 </script>
 </body>
 </html>
+
