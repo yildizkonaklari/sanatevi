@@ -37,7 +37,7 @@
         .calendar-slot {
             border: 1px solid #e5e7eb;
             padding: 2px;
-            min-height: 50px;
+            min-height: 40px;
             transition: background-color: 0.2s;
         }
         .calendar-slot.empty {
@@ -46,8 +46,6 @@
         }
         .calendar-event {
              cursor: pointer;
-             font-size: 11px;
-             line-height: 1.2;
         }
         .calendar-event.available {
             background-color: #eff6ff;
@@ -798,7 +796,7 @@
                     studentsInSlot.forEach(student => {
                         const course = state.courses.find(c => c.id === student.courseId);
                         if (course) {
-                            slotContentHTML += `<div class="available calendar-event p-px rounded mb-1 text-xs leading-tight border border-blue-200" data-student-id="${student.id}">
+                            slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-[11px] leading-tight border border-blue-200" data-student-id="${student.id}">
                                                 <p class="font-bold">${course.name}</p>
                                                 <p>${student.firstName}</p>
                                              </div>`;
@@ -810,7 +808,7 @@
                          if (student) {
                              const course = state.courses.find(c => c.id === student.courseId);
                              if (course) {
-                                 slotContentHTML += `<div class="makeup calendar-event p-px rounded mb-1 text-xs leading-tight border border-yellow-300" data-student-id="${student.id}">
+                                 slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-[11px] leading-tight border border-yellow-300" data-student-id="${student.id}">
                                                     <p class="font-bold">${course.name} (Telafi)</p>
                                                     <p>${student.firstName}</p>
                                                  </div>`;
@@ -1526,7 +1524,7 @@
             if (!modal.classList.contains('hidden')) {
                  if (!modalContent.contains(e.target)) {
                     if (!e.target.closest('button, a')) {
-                       hideModal();
+                       // hideModal();
                     }
                  }
             }
@@ -1624,7 +1622,19 @@
             }
         });
 
-        document.querySelector('main').addEventListener('click', handleTableClicks);
+        document.querySelector('main').addEventListener('click', (e) => {
+            const calendarEvent = e.target.closest('.calendar-event');
+            if(calendarEvent){
+                e.preventDefault();
+                const studentId = calendarEvent.dataset.studentId;
+                const student = state.students.find(s => s.id == studentId);
+                if (student) {
+                    showModal(getStudentStatusModalHTML(student));
+                }
+                return;
+            }
+            handleTableClicks(e);
+        });
         
         // --- AUTHENTICATION ---
         authForm.addEventListener('submit', (e) => {
