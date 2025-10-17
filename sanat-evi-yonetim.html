@@ -872,6 +872,7 @@
                             </div>
                             <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded h-fit">Ekle</button>
                         </div>
+                         <div id="payment-feedback" class="text-center font-medium mt-2 h-5"></div>
                     </form>
                 </div>
                 <div class="text-right mt-6">
@@ -1175,16 +1176,28 @@
             const student = state.students.find(s => s.id == studentId);
 
             if (amount > 0 && student) {
+                const feedbackEl = document.getElementById('payment-feedback');
+                form.querySelector('button[type="submit"]').disabled = true;
+
                 loadingOverlay.classList.remove('hidden');
                 const newPayment = { amount, date: new Date().toISOString(), type: 'payment' };
                 const updatedPayments = [...(student.payments || []), newPayment];
                 try {
                     await db.collection('students').doc(studentId).update({ payments: updatedPayments });
+                    if (feedbackEl) {
+                        feedbackEl.textContent = `${student.firstName} ${student.lastName} - ${amount.toFixed(2)} ₺ ödeme eklendi.`;
+                        feedbackEl.classList.add('text-green-600');
+                    }
+                    setTimeout(() => hideModal(), 1500);
                 } catch(error) {
                     console.error("Ödeme eklenemedi:", error);
+                     if (feedbackEl) {
+                        feedbackEl.textContent = 'Bir hata oluştu!';
+                        feedbackEl.classList.add('text-red-600');
+                     }
+                     form.querySelector('button[type="submit"]').disabled = false;
                 } finally {
                     loadingOverlay.classList.add('hidden');
-                    hideModal();
                 }
             }
         }
