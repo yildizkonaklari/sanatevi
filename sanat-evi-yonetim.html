@@ -317,7 +317,7 @@
                             <select id="calendar-course-filter" class="p-2 border rounded-md w-full"></select>
                        </div>
                     </div>
-                    <div class="bg-white p-2 rounded-lg shadow-md">
+                    <div class="bg-white p-2 rounded-lg shadow-md overflow-x-auto">
                         <div id="calendar-grid" class="grid">
                             <!-- Saatler ve Günler JS ile doldurulacak -->
                         </div>
@@ -743,12 +743,7 @@
             grid.innerHTML = '';
 
             // Grid sütunlarını ekran boyutuna göre ayarla
-            if (window.innerWidth < 768) {
-                grid.style.gridTemplateColumns = '40px repeat(7, 1fr)';
-            } else {
-                grid.style.gridTemplateColumns = '60px repeat(7, 1fr)';
-            }
-
+            grid.style.minWidth = '800px';
 
             const weekInfo = getWeekInfo(viewDate);
             const { weekStart, weekEnd, dates } = weekInfo;
@@ -1417,6 +1412,7 @@
         async function handleTableClicks(e) {
             const calendarEvent = e.target.closest('.calendar-event');
             if (calendarEvent) {
+                e.preventDefault();
                 const studentId = calendarEvent.dataset.studentId;
                 const student = state.students.find(s => s.id == studentId);
                 if (student) {
@@ -1526,25 +1522,14 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-backdrop')) {
+            if (e.target.id === 'modal') {
                 hideModal();
             }
         });
-        
-        document.body.addEventListener('click', e => {
-            if (!modal.classList.contains('hidden')) {
-                 if (!modalContent.contains(e.target)) {
-                    if (!e.target.closest('button, a')) {
-                       hideModal();
-                    }
-                 }
-            }
-        });
-
 
         modalContent.addEventListener('click', e => {
             const target = e.target;
-            
+
             if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
                 hideModal();
                 return;
