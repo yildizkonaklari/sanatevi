@@ -750,6 +750,8 @@
             const fullDayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
             const timeSlots = Array.from({ length: 13 }, (_, i) => `${String(i + 9).padStart(2, '0')}:00`);
             const filterCourseId = document.getElementById('calendar-course-filter').value;
+            const today = new Date();
+            today.setHours(0,0,0,0);
 
             const options = { month: 'short', day: 'numeric' };
             weekRangeDisplay.textContent = `${weekStart.toLocaleDateString('tr-TR', options)} - ${weekEnd.toLocaleDateString('tr-TR', options)} ${weekStart.getFullYear()}`;
@@ -757,7 +759,8 @@
             // Header
             grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm"></div>`;
             dates.forEach((date, i) => {
-                grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm">${dayNames[i]}<br>${date.getDate()}</div>`;
+                const isToday = date.getTime() === today.getTime();
+                grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm ${isToday ? 'bg-indigo-100 rounded-t' : ''}">${dayNames[i]}<br>${date.getDate()}</div>`;
             });
 
             const activeStudents = state.students.filter(s => s.status === 'active');
@@ -772,6 +775,7 @@
                 grid.innerHTML += `<div class="font-semibold p-2 text-center text-sm flex items-center justify-center">${time}</div>`;
                 dates.forEach((date, i) => {
                     const day = fullDayNames[i];
+                    const isToday = date.getTime() === today.getTime();
                     
                     let studentsInSlot = activeStudents.filter(s => s.day === day && s.time === time);
                     let makeupsInSlot = allMakeupsThisWeek.filter(m => {
@@ -792,7 +796,7 @@
                     studentsInSlot.forEach(student => {
                         const course = state.courses.find(c => c.id === student.courseId);
                         if (course) {
-                            slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-xs border border-blue-200" data-student-id="${student.id}">
+                            slotContentHTML += `<div class="available calendar-event p-px rounded mb-1 text-xs leading-tight border border-blue-200" data-student-id="${student.id}">
                                                 <p class="font-bold">${course.name}</p>
                                                 <p>${student.firstName}</p>
                                              </div>`;
@@ -804,7 +808,7 @@
                          if (student) {
                              const course = state.courses.find(c => c.id === student.courseId);
                              if (course) {
-                                 slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-xs border border-yellow-300" data-student-id="${student.id}">
+                                 slotContentHTML += `<div class="makeup calendar-event p-px rounded mb-1 text-xs leading-tight border border-yellow-300" data-student-id="${student.id}">
                                                     <p class="font-bold">${course.name} (Telafi)</p>
                                                     <p>${student.firstName}</p>
                                                  </div>`;
@@ -812,10 +816,11 @@
                          }
                     });
 
+                    const todayClass = isToday ? 'bg-indigo-50' : '';
                     if (slotContentHTML === '') {
-                        grid.innerHTML += `<div class="calendar-slot empty"></div>`;
+                        grid.innerHTML += `<div class="calendar-slot empty ${todayClass}"></div>`;
                     } else {
-                        grid.innerHTML += `<div class="calendar-slot p-1 overflow-y-auto">${slotContentHTML}</div>`;
+                        grid.innerHTML += `<div class="calendar-slot p-1 overflow-y-auto ${todayClass}">${slotContentHTML}</div>`;
                     }
                 });
             });
@@ -1521,25 +1526,14 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
 
         modal.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-backdrop')) {
+            if (e.target.classList.contains('modal-backdrop') || e.target.id === 'modal') {
                 hideModal();
             }
         });
-        
-        document.body.addEventListener('click', e => {
-            if (!modal.classList.contains('hidden')) {
-                 if (!modalContent.contains(e.target)) {
-                    if (!e.target.closest('button, a')) {
-                       hideModal();
-                    }
-                 }
-            }
-        });
-
 
         modalContent.addEventListener('click', e => {
             const target = e.target;
-
+            
             if (target.id === 'cancel-modal-btn' || target.closest('#cancel-modal-btn')) {
                 e.stopPropagation();
                 hideModal();
