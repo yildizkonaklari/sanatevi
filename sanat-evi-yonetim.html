@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Sanat Evi Kurs Yönetim Sistemi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -70,6 +71,7 @@
                 visibility: visible;
             }
             #print-area {
+                display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -1465,6 +1467,17 @@
             }
         });
 
+        document.body.addEventListener('click', e => {
+            if (!modal.classList.contains('hidden') && !modalContent.contains(e.target)) {
+                 if (e.target.closest('.student-name-link') || e.target.closest('.edit-student-btn') || e.target.closest('.add-payment-btn') || e.target.closest('.send-student-info-btn') || e.target.closest('.calendar-event') || e.target.closest('#add-student-btn') || e.target.closest('#add-course-btn')) {
+                    // Bu butonlar yeni modal açtığı için mevcut modalı kapatma
+                } else if (!e.target.closest('#modal-content')) {
+                     // hideModal(); // Bu satır mobil sorununa yol açabilir, şimdilik yorumda
+                }
+            }
+        });
+
+
         modalContent.addEventListener('click', e => {
             const target = e.target;
              e.stopPropagation();
@@ -1497,9 +1510,9 @@
             }
         });
         
-        modal.addEventListener('submit', (e) => {
+        modalContent.addEventListener('submit', (e) => {
             e.preventDefault(); 
-
+            
             if (e.target.id === 'telafi-form') {
                 const studentId = e.target.querySelector('button').dataset.id;
                 const date = e.target.elements.telafiDate.value;
@@ -1591,4 +1604,3 @@
 </script>
 </body>
 </html>
-
