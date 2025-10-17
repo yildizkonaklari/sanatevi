@@ -925,11 +925,12 @@
 
                     <div class="mb-6">
                         <h3 class="font-bold mb-2">Bugünkü Dersi İşle</h3>
-                        <div class="flex gap-4">
+                        <div id="attendance-buttons" class="flex gap-4">
                             <button id="record-attendance-geldi" data-id="${student.id}" class="flex-1 bg-green-500 text-white py-2 rounded hover:bg-green-600">Geldi</button>
                             <button id="record-attendance-gelmedi" data-id="${student.id}" class="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600">Gelmedi</button>
                             <button id="record-attendance-telafi-btn" data-id="${student.id}" class="flex-1 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">Telafi</button>
                         </div>
+                        <div id="attendance-feedback" class="text-center font-medium mt-2 h-5"></div>
                         <p class="text-xs text-gray-500 mt-2 text-center">Uyarı: Öğrencinin telafi olan dersini gelmedi olarak işaretlemeyiniz. Mazeretsiz gelmeyenler için 'Gelmedi' olarak işleyiniz.</p>
                     </div>
 
@@ -1192,6 +1193,13 @@
             const student = state.students.find(s => s.id == studentId);
             if (!student) return;
 
+            const attendanceButtons = document.getElementById('attendance-buttons');
+            const feedbackEl = document.getElementById('attendance-feedback');
+
+            if ((status === 'geldi' || status === 'gelmedi') && attendanceButtons) {
+                Array.from(attendanceButtons.children).forEach(btn => btn.disabled = true);
+            }
+
             loadingOverlay.classList.remove('hidden');
             const newAttendance = [...(student.attendance || [])];
             let newPayments = [...(student.payments || [])];
@@ -1220,11 +1228,32 @@
                     attendance: newAttendance,
                     payments: newPayments
                 });
+
+                if (status === 'geldi' || status === 'gelmedi') {
+                    if (feedbackEl) {
+                        let statusText = status === 'geldi' ? 'Geldi' : 'Gelmedi';
+                        feedbackEl.textContent = `${student.firstName} - ${statusText} olarak kaydedildi.`;
+                        feedbackEl.classList.add('text-green-600');
+                        feedbackEl.classList.remove('text-red-600');
+                    }
+                    setTimeout(() => {
+                        hideModal();
+                    }, 1500);
+                } else { // Telafi için hemen kapat
+                    hideModal();
+                }
             } catch (error) {
                 console.error("Devam durumu güncellenemedi: ", error);
+                if (attendanceButtons) {
+                    Array.from(attendanceButtons.children).forEach(btn => btn.disabled = false);
+                }
+                 if (feedbackEl) {
+                    feedbackEl.textContent = 'Bir hata oluştu!';
+                    feedbackEl.classList.remove('text-green-600');
+                    feedbackEl.classList.add('text-red-600');
+                }
             } finally {
                 loadingOverlay.classList.add('hidden');
-                hideModal();
             }
         }
         
@@ -1549,3 +1578,4 @@
 </script>
 </body>
 </html>
+
