@@ -782,10 +782,10 @@
                     const day = fullDayNames[i];
                     const isToday = date.getTime() === today.getTime();
                     
-                    let studentsInSlot = activeStudents.filter(s => s.day === day && s.time === time);
+                    let studentsInSlot = activeStudents.filter(s => s.day === day && s.time.startsWith(time.substring(0,2)));
                     let makeupsInSlot = allMakeupsThisWeek.filter(m => {
                         const makeupDate = new Date(m.date);
-                        return makeupDate.getDate() === date.getDate() && m.time === time;
+                        return makeupDate.getDate() === date.getDate() && m.time.startsWith(time.substring(0,2));
                     });
                     
                     if (filterCourseId) {
@@ -803,7 +803,7 @@
                         if (course) {
                             slotContentHTML += `<div class="available calendar-event p-1 rounded mb-1 text-[11px] leading-tight border border-blue-200" data-student-id="${student.id}">
                                                 <p class="font-bold">${course.name}</p>
-                                                <p>${student.firstName}</p>
+                                                <p>${student.firstName} (${student.time})</p>
                                              </div>`;
                         }
                     });
@@ -815,7 +815,7 @@
                              if (course) {
                                  slotContentHTML += `<div class="makeup calendar-event p-1 rounded mb-1 text-[11px] leading-tight border border-yellow-300" data-student-id="${student.id}">
                                                     <p class="font-bold">${course.name} (Telafi)</p>
-                                                    <p>${student.firstName}</p>
+                                                    <p>${student.firstName} (${makeup.time})</p>
                                                  </div>`;
                              }
                          }
@@ -878,7 +878,7 @@
                             </div>
                             <div>
                                <label class="block text-sm font-medium text-gray-700">Ders Saati</label>
-                               <input type="time" name="time" value="${student.time || '09:00'}" step="3600" required class="mt-1 block w-full p-2 border rounded">
+                               <input type="time" name="time" value="${student.time || '09:00'}" required class="mt-1 block w-full p-2 border rounded">
                             </div>
                         </div>
                         <textarea name="notes" placeholder="Özel Notlar..." class="w-full p-2 border rounded mt-4">${student.notes || ''}</textarea>
@@ -1018,7 +1018,7 @@
                          <h4 class="font-semibold mb-2">Telafi Dersi Planla</h4>
                          <div class="flex flex-col sm:flex-row gap-4">
                              <input type="date" name="telafiDate" required class="p-2 border rounded w-full">
-                             <input type="time" name="telafiTime" step="3600" required class="p-2 border rounded w-full">
+                             <input type="time" name="telafiTime" required class="p-2 border rounded w-full">
                          </div>
                          <p id="telafi-form-error" class="text-red-600 text-sm mt-2 text-center h-4"></p>
                          <button type="submit" data-id="${student.id}" class="w-full mt-2 bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Telafiyi Kaydet</button>
@@ -1511,16 +1511,7 @@
             const lessonDuration = course.duration || 60;
             const endTime = new Date(startTime.getTime() + lessonDuration * 60 * 1000);
 
-            const toGoogleFormat = (date) => {
-                const pad = (num) => (num < 10 ? '0' : '') + num;
-                return date.getFullYear() +
-                       pad(date.getMonth() + 1) +
-                       pad(date.getDate()) +
-                       'T' +
-                       pad(date.getHours()) +
-                       pad(date.getMinutes()) +
-                       '00';
-            };
+            const toGoogleFormat = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
             
             const startDateGoogle = toGoogleFormat(startTime);
             const endDateGoogle = toGoogleFormat(endTime);
@@ -1530,7 +1521,7 @@
             const location = encodeURIComponent("Alegori Sanat Evi");
             const guest = student.parentEmail ? encodeURIComponent(student.parentEmail) : '';
             
-            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateGoogle}/${endDateGoogle}&details=${details}&location=${location}&add=${guest}&recur=RRULE:FREQ%3DWEEKLY`;
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateGoogle}/${endDateGoogle}&details=${details}&location=${location}&add=${guest}&recur=RRULE:FREQ%3DWEEKLY&ctz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
             
             window.open(url, '_blank');
         }
@@ -1591,6 +1582,16 @@
         });
         
         document.body.addEventListener('click', e => {
+            if (e.target.closest('.calendar-event')) {
+                e.preventDefault();
+                const studentId = e.target.closest('.calendar-event').dataset.studentId;
+                const student = state.students.find(s => s.id == studentId);
+                if (student) {
+                    showModal(getStudentStatusModalHTML(student));
+                }
+                return;
+            }
+
             if (!modal.classList.contains('hidden')) {
                  if (!modalContent.contains(e.target)) {
                     if (!e.target.closest('button, a')) {
@@ -1692,19 +1693,7 @@
             }
         });
 
-        document.querySelector('main').addEventListener('click', (e) => {
-             const calendarEvent = e.target.closest('.calendar-event');
-             if (calendarEvent) {
-                e.preventDefault();
-                const studentId = calendarEvent.dataset.studentId;
-                const student = state.students.find(s => s.id == studentId);
-                if (student) {
-                    showModal(getStudentStatusModalHTML(student));
-                }
-                return;
-            }
-            handleTableClicks(e);
-        });
+        document.querySelector('main').addEventListener('click', handleTableClicks);
         
         // --- AUTHENTICATION ---
         authForm.addEventListener('submit', (e) => {
