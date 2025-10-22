@@ -1500,7 +1500,16 @@
             const startTime = nextLessonDate;
             const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
-            const toGoogleFormat = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0];
+            const toGoogleFormat = (date) => {
+                const pad = (num) => (num < 10 ? '0' : '') + num;
+                return date.getFullYear() +
+                       pad(date.getMonth() + 1) +
+                       pad(date.getDate()) +
+                       'T' +
+                       pad(date.getHours()) +
+                       pad(date.getMinutes()) +
+                       '00';
+            };
             
             const startDateGoogle = toGoogleFormat(startTime);
             const endDateGoogle = toGoogleFormat(endTime);
@@ -1571,6 +1580,16 @@
         });
         
         document.body.addEventListener('click', e => {
+            if (e.target.closest('.calendar-event')) {
+                e.preventDefault();
+                const studentId = e.target.closest('.calendar-event').dataset.studentId;
+                const student = state.students.find(s => s.id == studentId);
+                if (student) {
+                    showModal(getStudentStatusModalHTML(student));
+                }
+                return;
+            }
+
             if (!modal.classList.contains('hidden')) {
                  if (!modalContent.contains(e.target)) {
                     if (!e.target.closest('button, a')) {
@@ -1672,19 +1691,7 @@
             }
         });
 
-        document.querySelector('main').addEventListener('click', (e) => {
-             const calendarEvent = e.target.closest('.calendar-event');
-             if (calendarEvent) {
-                e.preventDefault();
-                const studentId = calendarEvent.dataset.studentId;
-                const student = state.students.find(s => s.id == studentId);
-                if (student) {
-                    showModal(getStudentStatusModalHTML(student));
-                }
-                return;
-            }
-            handleTableClicks(e);
-        });
+        document.querySelector('main').addEventListener('click', handleTableClicks);
         
         // --- AUTHENTICATION ---
         authForm.addEventListener('submit', (e) => {
