@@ -1589,7 +1589,7 @@
         });
         
         document.body.addEventListener('click', e => {
-             if (e.target.closest('.calendar-event')) {
+            if (e.target.closest('.calendar-event')) {
                 e.preventDefault();
                 const studentId = e.target.closest('.calendar-event').dataset.studentId;
                 const student = state.students.find(s => s.id == studentId);
@@ -1598,7 +1598,7 @@
                 }
                 return;
             }
-            
+
             if (!modal.classList.contains('hidden')) {
                  if (!modalContent.contains(e.target)) {
                     if (!e.target.closest('button, a')) {
