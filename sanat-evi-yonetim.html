@@ -931,10 +931,17 @@
             const course = state.courses.find(c => c.id === student.courseId);
             const balance = (student.payments || []).reduce((sum, p) => sum + p.amount, 0);
             
-            let paymentHistory = (student.payments || []).map(p => {
+            let paymentHistory = (student.payments || []).map((p, index) => {
                 const typeText = p.type === 'initial' ? 'İlk Kayıt' : p.type === 'renewal' ? 'Dönem Yenileme' : 'Ödeme';
                 const amountClass = p.amount > 0 ? 'text-green-600' : 'text-red-600';
-                return `<li class="flex justify-between py-1 border-b"><span>${new Date(p.date).toLocaleDateString('tr-TR')} - ${typeText}</span><span class="font-semibold ${amountClass}">${p.amount.toFixed(2)} ₺</span></li>`
+                return `<li class="flex justify-between items-center py-1 border-b">
+                            <span>${new Date(p.date).toLocaleDateString('tr-TR')} - ${typeText}</span>
+                            <span class="font-semibold ${amountClass}">${p.amount.toFixed(2)} ₺
+                                <button class="delete-payment-btn text-red-500 hover:text-red-700 p-1 ml-2" data-student-id="${student.id}" data-payment-index="${index}" title="Bu ödemeyi sil">
+                                    <i class="fas fa-trash-alt fa-xs"></i>
+                                </button>
+                            </span>
+                        </li>`;
             }).join('');
 
             return `
@@ -1275,7 +1282,10 @@
                         feedbackEl.textContent = `${student.firstName} ${student.lastName} - ${amount.toFixed(2)} ₺ ödeme eklendi.`;
                         feedbackEl.classList.add('text-green-600');
                     }
-                    setTimeout(() => hideModal(), 1500);
+                    setTimeout(() => {
+                        const freshStudent = state.students.find(s => s.id == studentId);
+                        if(freshStudent) showModal(getPaymentFormHTML(freshStudent));
+                    }, 1500);
                 } catch(error) {
                     console.error("Ödeme eklenemedi:", error);
                      if (feedbackEl) {
@@ -1336,10 +1346,11 @@
                         feedbackEl.classList.add('text-green-600');
                         feedbackEl.classList.remove('text-red-600');
                     }
-                    setTimeout(() => {
-                        hideModal();
+                     setTimeout(() => {
+                        const freshStudent = state.students.find(s => s.id == studentId);
+                        if(freshStudent) showModal(getStudentStatusModalHTML(freshStudent));
                     }, 1500);
-                } else { // Telafi için hemen kapat
+                } else { 
                     hideModal();
                 }
             } catch (error) {
@@ -1646,6 +1657,13 @@
                 const attendanceIndex = parseInt(button.dataset.attendanceIndex, 10);
                 handleAttendanceDelete(studentIdToDelete, attendanceIndex);
             }
+             if (target.closest('.delete-payment-btn')) {
+                e.stopPropagation();
+                const button = target.closest('.delete-payment-btn');
+                const studentIdToDelete = button.dataset.studentId;
+                const paymentIndex = parseInt(button.dataset.paymentIndex, 10);
+                handlePaymentDelete(studentIdToDelete, paymentIndex);
+            }
         });
         
         modalContent.addEventListener('submit', (e) => {
@@ -1739,6 +1757,27 @@
                 loadingOverlay.classList.add('hidden');
             }
         });
+
+        async function handlePaymentDelete(studentId, paymentIndex) {
+            const student = state.students.find(s => s.id === studentId);
+            if (!student || !student.payments || !student.payments[paymentIndex]) return;
+
+            if (confirm('Bu ödeme kaydını silmek istediğinizden emin misiniz?')) {
+                loadingOverlay.classList.remove('hidden');
+                const newPayments = [...student.payments];
+                newPayments.splice(paymentIndex, 1);
+                
+                try {
+                    await db.collection('students').doc(studentId).update({ payments: newPayments });
+                    const updatedStudent = { ...student, payments: newPayments };
+                    showModal(getPaymentFormHTML(updatedStudent));
+                } catch (error) {
+                    console.error("Ödeme silinemedi:", error);
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+        }
 
         function handleDownloadPDF() {
             const { jsPDF } = window.jspdf;
