@@ -7,6 +7,8 @@
     <title>Sanat Evi Kurs Yönetim Sistemi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Custom Stiller ve Animasyonlar */
         body {
@@ -208,9 +210,14 @@
                 <div id="students-page" class="page">
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Öğrenci Yönetimi</h1>
-                        <button id="add-student-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 flex items-center">
-                            <i class="fas fa-plus mr-2"></i> Yeni Öğrenci Ekle
-                        </button>
+                        <div class="flex gap-2">
+                             <button id="download-pdf-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 flex items-center">
+                                <i class="fas fa-file-pdf mr-2"></i> PDF İndir
+                            </button>
+                            <button id="add-student-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 flex items-center">
+                                <i class="fas fa-plus mr-2"></i> Yeni Öğrenci Ekle
+                            </button>
+                        </div>
                     </div>
                     <!-- Arama ve Filtreleme -->
                     <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4">
@@ -1582,7 +1589,7 @@
         });
         
         document.body.addEventListener('click', e => {
-            if (e.target.closest('.calendar-event')) {
+             if (e.target.closest('.calendar-event')) {
                 e.preventDefault();
                 const studentId = e.target.closest('.calendar-event').dataset.studentId;
                 const student = state.students.find(s => s.id == studentId);
@@ -1591,7 +1598,7 @@
                 }
                 return;
             }
-
+            
             if (!modal.classList.contains('hidden')) {
                  if (!modalContent.contains(e.target)) {
                     if (!e.target.closest('button, a')) {
