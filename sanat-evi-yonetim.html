@@ -261,6 +261,7 @@
                                 <tr>
                                     <th class="p-4 text-left text-sm font-semibold text-gray-600">Kurs Adı</th>
                                     <th class="p-4 text-left text-sm font-semibold text-gray-600">Eğitmen</th>
+                                    <th class="p-4 text-left text-sm font-semibold text-gray-600">Süre (dk)</th>
                                     <th class="p-4 text-left text-sm font-semibold text-gray-600">Kontenjan</th>
                                     <th class="p-4 text-left text-sm font-semibold text-gray-600">Kayıtlı Öğrenci</th>
                                     <th class="p-4 text-center text-sm font-semibold text-gray-600">İşlemler</th>
@@ -684,6 +685,7 @@
                     <tr class="border-b">
                         <td class="p-4 font-medium">${course.name}</td>
                         <td class="p-4">${course.instructor}</td>
+                        <td class="p-4">${course.duration || 60}</td>
                         <td class="p-4">${course.quota}</td>
                         <td class="p-4">${studentCount}</td>
                         <td class="p-4 text-center">
@@ -900,8 +902,15 @@
                         <input type="text" name="name" placeholder="Kurs Adı" value="${course.name || ''}" required class="p-2 border rounded">
                         <input type="text" name="instructor" placeholder="Eğitmen Adı" value="${course.instructor || ''}" required class="p-2 border rounded">
                     </div>
-                     <div class="mt-4">
-                         <input type="number" name="quota" placeholder="Kontenjan" value="${course.quota || ''}" required class="w-full p-2 border rounded">
+                     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Kontenjan</label>
+                            <input type="number" name="quota" placeholder="8" value="${course.quota || ''}" required class="w-full p-2 border rounded">
+                         </div>
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700">Ders Süresi (dakika)</label>
+                            <input type="number" name="duration" placeholder="60" value="${course.duration || '60'}" required class="w-full p-2 border rounded">
+                         </div>
                      </div>
                     <div class="flex justify-end mt-6 gap-4">
                         <button type="button" id="cancel-modal-btn" class="bg-gray-300 px-4 py-2 rounded">İptal</button>
@@ -1222,6 +1231,7 @@
             const formData = new FormData(form);
             const courseData = Object.fromEntries(formData.entries());
             courseData.quota = parseInt(courseData.quota);
+            courseData.duration = parseInt(courseData.duration) || 60;
 
             loadingOverlay.classList.remove('hidden');
             try {
@@ -1498,7 +1508,8 @@
             nextLessonDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
             const startTime = nextLessonDate;
-            const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+            const lessonDuration = course.duration || 60;
+            const endTime = new Date(startTime.getTime() + lessonDuration * 60 * 1000);
 
             const toGoogleFormat = (date) => {
                 const pad = (num) => (num < 10 ? '0' : '') + num;
@@ -1580,16 +1591,6 @@
         });
         
         document.body.addEventListener('click', e => {
-            if (e.target.closest('.calendar-event')) {
-                e.preventDefault();
-                const studentId = e.target.closest('.calendar-event').dataset.studentId;
-                const student = state.students.find(s => s.id == studentId);
-                if (student) {
-                    showModal(getStudentStatusModalHTML(student));
-                }
-                return;
-            }
-
             if (!modal.classList.contains('hidden')) {
                  if (!modalContent.contains(e.target)) {
                     if (!e.target.closest('button, a')) {
@@ -1691,7 +1692,19 @@
             }
         });
 
-        document.querySelector('main').addEventListener('click', handleTableClicks);
+        document.querySelector('main').addEventListener('click', (e) => {
+             const calendarEvent = e.target.closest('.calendar-event');
+             if (calendarEvent) {
+                e.preventDefault();
+                const studentId = calendarEvent.dataset.studentId;
+                const student = state.students.find(s => s.id == studentId);
+                if (student) {
+                    showModal(getStudentStatusModalHTML(student));
+                }
+                return;
+            }
+            handleTableClicks(e);
+        });
         
         // --- AUTHENTICATION ---
         authForm.addEventListener('submit', (e) => {
@@ -1731,3 +1744,4 @@
 </script>
 </body>
 </html>
+
