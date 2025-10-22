@@ -211,11 +211,11 @@
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Öğrenci Yönetimi</h1>
                         <div class="flex gap-2">
-                             <button id="download-pdf-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 flex items-center">
-                                <i class="fas fa-file-pdf mr-2"></i> PDF İndir
+                             <button id="download-pdf-btn" class="bg-red-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-red-700 flex items-center">
+                                <i class="fas fa-file-pdf md:mr-2"></i> <span class="hidden md:inline">PDF İndir</span>
                             </button>
-                            <button id="add-student-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 flex items-center">
-                                <i class="fas fa-plus mr-2"></i> Yeni Öğrenci Ekle
+                            <button id="add-student-btn" class="bg-indigo-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-indigo-700 flex items-center">
+                                <i class="fas fa-plus md:mr-2"></i> <span class="hidden md:inline">Yeni Öğrenci Ekle</span>
                             </button>
                         </div>
                     </div>
@@ -258,8 +258,8 @@
                 <div id="courses-page" class="page">
                      <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Kurs Yönetimi</h1>
-                        <button id="add-course-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 flex items-center">
-                            <i class="fas fa-plus mr-2"></i> Yeni Kurs Ekle
+                        <button id="add-course-btn" class="bg-green-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-green-700 flex items-center">
+                            <i class="fas fa-plus md:mr-2"></i> <span class="hidden md:inline">Yeni Kurs Ekle</span>
                         </button>
                     </div>
                     <div class="bg-white rounded-lg shadow-md overflow-x-auto">
@@ -1581,6 +1581,8 @@
         document.getElementById('payment-status-filter').addEventListener('change', applyPaymentFilters);
 
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
+        document.getElementById('download-pdf-btn').addEventListener('click', handleDownloadPDF);
+
 
         modal.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop') || e.target.id === 'modal') {
@@ -1589,9 +1591,10 @@
         });
         
         document.body.addEventListener('click', e => {
-            if (e.target.closest('.calendar-event')) {
+            const calendarEvent = e.target.closest('.calendar-event');
+             if (calendarEvent) {
                 e.preventDefault();
-                const studentId = e.target.closest('.calendar-event').dataset.studentId;
+                const studentId = calendarEvent.dataset.studentId;
                 const student = state.students.find(s => s.id == studentId);
                 if (student) {
                     showModal(getStudentStatusModalHTML(student));
@@ -1736,6 +1739,84 @@
                 loadingOverlay.classList.add('hidden');
             }
         });
+
+        function handleDownloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const filters = {
+                name: document.getElementById('student-search').value,
+                courseId: document.getElementById('student-course-filter').value,
+                paymentStatus: document.getElementById('student-payment-filter').value,
+                status: document.getElementById('student-status-filter').value
+            };
+
+            let filteredStudents = [...state.students];
+
+            if (filters.status && filters.status !== 'all') {
+                filteredStudents = filteredStudents.filter(s => s.status === filters.status);
+            }
+            if (filters.name) {
+                filteredStudents = filteredStudents.filter(s => 
+                    `${s.firstName} ${s.lastName}`.toLowerCase().includes(filters.name.toLowerCase())
+                );
+            }
+            if (filters.courseId) {
+                filteredStudents = filteredStudents.filter(s => s.courseId == filters.courseId);
+            }
+            if (filters.paymentStatus) {
+                filteredStudents = filteredStudents.filter(s => {
+                    const balance = (s.payments || []).reduce((sum, p) => sum + p.amount, 0);
+                    const isInDebt = balance < 0;
+                    return filters.paymentStatus === 'unpaid' ? isInDebt : !isInDebt;
+                });
+            }
+
+            const dayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+            filteredStudents.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
+
+            const head = [['Eğitmen', 'Öğrenci Adı Soyadı', 'Kurs', 'Ders Günü ve Saati']];
+            const body = filteredStudents.map(student => {
+                const course = state.courses.find(c => c.id === student.courseId);
+                return [
+                    course ? course.instructor : 'N/A',
+                    `${student.firstName} ${student.lastName}`,
+                    course ? course.name : 'N/A',
+                    `${student.day} ${student.time}`
+                ];
+            });
+
+            let title = "Öğrenci Ders Raporu";
+            if (filters.courseId) {
+                const course = state.courses.find(c => c.id === filters.courseId);
+                if (course) title = `${course.name} - ${title}`;
+            }
+
+            doc.setFontSize(18);
+            doc.text(title, 14, 22);
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            const date = new Date().toLocaleDateString('tr-TR');
+            doc.text(`Tarih: ${date}`, 14, 28);
+
+            doc.autoTable({
+                startY: 35,
+                head: head,
+                body: body,
+                theme: 'striped',
+                headStyles: { fillColor: [41, 128, 185] },
+                didDrawPage: function (data) {
+                    let str = "Sayfa " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(10);
+                    let pageSize = doc.internal.pageSize;
+                    let pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
+                }
+            });
+
+            doc.save('kurs_ogrenci_listesi.pdf');
+        }
+
     });
 </script>
 </body>
