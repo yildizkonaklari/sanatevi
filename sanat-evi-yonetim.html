@@ -46,6 +46,8 @@
         }
         .calendar-event {
              cursor: pointer;
+             font-size: 11px;
+             line-height: 1.2;
         }
         .calendar-event.available {
             background-color: #eff6ff;
@@ -623,7 +625,8 @@
                             <button class="edit-student-btn text-blue-500 hover:text-blue-700 mr-2" data-id="${student.id}" title="Düzenle"><i class="fas fa-edit"></i></button>
                             <button class="delete-student-btn text-red-500 hover:text-red-700 mr-2" data-id="${student.id}" title="Sil"><i class="fas fa-trash"></i></button>
                             <button class="send-student-info-btn text-green-500 hover:text-green-700 mr-2" data-id="${student.id}" title="Gönder"><i class="fas fa-paper-plane"></i></button>
-                            <button class="print-student-btn text-gray-500 hover:text-gray-700" data-id="${student.id}" title="Yazdır"><i class="fas fa-print"></i></button>
+                            <button class="print-student-btn text-gray-500 hover:text-gray-700 mr-2" data-id="${student.id}" title="Yazdır"><i class="fas fa-print"></i></button>
+                            <a href="#" class="add-to-calendar-btn text-blue-500 hover:text-blue-700" data-id="${student.id}" title="Google Takvim'e Ekle"><i class="fas fa-calendar-plus"></i></a>
                         </td>
                     </tr>
                 `;
@@ -855,6 +858,8 @@
                             <input type="text" name="lastName" placeholder="Soyad" value="${student.lastName || ''}" required class="p-2 border rounded">
                             <input type="tel" name="phone" placeholder="Telefon" value="${student.phone || ''}" class="p-2 border rounded">
                             <input type="email" name="email" placeholder="E-posta" value="${student.email || ''}" class="p-2 border rounded">
+                             <input type="tel" name="parentPhone" placeholder="Veli Telefon" value="${student.parentPhone || ''}" class="p-2 border rounded">
+                            <input type="email" name="parentEmail" placeholder="Veli E-posta" value="${student.parentEmail || ''}" class="p-2 border rounded">
                             <select name="courseId" required class="p-2 border rounded"><option value="">Kurs Seçin...</option>${courseOptions}</select>
                             <input type="date" name="registrationDate" value="${student.registrationDate || new Date().toISOString().slice(0,10)}" required class="p-2 border rounded">
                             <div>
@@ -1442,6 +1447,9 @@
             if (target.classList.contains('print-student-btn')) {
                 printStudentInfo(id);
             }
+             if (target.classList.contains('add-to-calendar-btn')) {
+                generateGoogleCalendarLink(id);
+            }
             if (target.classList.contains('edit-course-btn')) {
                 const course = state.courses.find(c => c.id == id);
                 if (course) showModal(getCourseFormHTML(course));
@@ -1463,6 +1471,48 @@
                 const student = state.students.find(s => s.id == id);
                 if (student) showModal(getPaymentFormHTML(student));
             }
+        }
+        
+        function generateGoogleCalendarLink(studentId) {
+            const student = state.students.find(s => s.id == studentId);
+            const course = state.courses.find(c => c.id === student.courseId);
+            if (!student || !course) {
+                alert('Öğrenci veya kurs bilgileri bulunamadı.');
+                return;
+            }
+
+            const dayMap = { 'Pazar': 0, 'Pazartesi': 1, 'Salı': 2, 'Çarşamba': 3, 'Perşembe': 4, 'Cuma': 5, 'Cumartesi': 6 };
+            const lessonDayIndex = dayMap[student.day];
+
+            const now = new Date();
+            const currentDayIndex = now.getDay();
+            let daysUntilNextLesson = lessonDayIndex - currentDayIndex;
+            if (daysUntilNextLesson < 0) {
+                daysUntilNextLesson += 7;
+            }
+
+            const nextLessonDate = new Date(now);
+            nextLessonDate.setDate(now.getDate() + daysUntilNextLesson);
+            
+            const [hours, minutes] = student.time.split(':');
+            nextLessonDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            const startTime = nextLessonDate;
+            const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+
+            const toGoogleFormat = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0];
+            
+            const startDateGoogle = toGoogleFormat(startTime);
+            const endDateGoogle = toGoogleFormat(endTime);
+
+            const title = encodeURIComponent(`${course.name} Dersi - ${student.firstName} ${student.lastName}`);
+            const details = encodeURIComponent("Alegori Sanat Evi'nde ders.");
+            const location = encodeURIComponent("Alegori Sanat Evi");
+            const guest = student.parentEmail ? encodeURIComponent(student.parentEmail) : '';
+            
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateGoogle}/${endDateGoogle}&details=${details}&location=${location}&add=${guest}&recur=RRULE:FREQ%3DWEEKLY`;
+            
+            window.open(url, '_blank');
         }
 
         function printStudentInfo(studentId) {
@@ -1623,8 +1673,8 @@
         });
 
         document.querySelector('main').addEventListener('click', (e) => {
-            const calendarEvent = e.target.closest('.calendar-event');
-            if(calendarEvent){
+             const calendarEvent = e.target.closest('.calendar-event');
+             if (calendarEvent) {
                 e.preventDefault();
                 const studentId = calendarEvent.dataset.studentId;
                 const student = state.students.find(s => s.id == studentId);
@@ -1674,4 +1724,3 @@
 </script>
 </body>
 </html>
-
