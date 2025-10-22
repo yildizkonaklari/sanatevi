@@ -1278,17 +1278,17 @@
                 const updatedPayments = [...(student.payments || []), newPayment];
                 try {
                     await db.collection('students').doc(studentId).update({ payments: updatedPayments });
-                    if (feedbackEl) {
-                        feedbackEl.textContent = `${student.firstName} ${student.lastName} - ${amount.toFixed(2)} ₺ ödeme eklendi.`;
-                        feedbackEl.classList.add('text-green-600');
+                    const updatedStudent = { ...student, payments: updatedPayments };
+                    showModal(getPaymentFormHTML(updatedStudent)); // Modalı yeniden render et
+                    
+                    const newFeedbackEl = document.getElementById('payment-feedback'); // Yeni feedback el'i bul
+                    if (newFeedbackEl) {
+                        newFeedbackEl.textContent = `${student.firstName} ${student.lastName} - ${amount.toFixed(2)} ₺ ödeme eklendi.`;
+                        newFeedbackEl.classList.add('text-green-600');
                     }
-                    setTimeout(() => {
-                        const freshStudent = state.students.find(s => s.id == studentId);
-                        if(freshStudent) showModal(getPaymentFormHTML(freshStudent));
-                    }, 1500);
                 } catch(error) {
                     console.error("Ödeme eklenemedi:", error);
-                     if (feedbackEl) {
+                     if (feedbackEl) { // Hata durumunda eski el'i kullan (veya yenisini bul)
                         feedbackEl.textContent = 'Bir hata oluştu!';
                         feedbackEl.classList.add('text-red-600');
                      }
@@ -1339,18 +1339,18 @@
                     payments: newPayments
                 });
 
+                const updatedStudent = { ...student, attendance: newAttendance, payments: newPayments };
+                showModal(getStudentStatusModalHTML(updatedStudent)); // Modalı yeniden render et
+
                 if (status === 'geldi' || status === 'gelmedi') {
-                    if (feedbackEl) {
+                    const newFeedbackEl = document.getElementById('attendance-feedback'); // Yeni feedback el'i bul
+                    if (newFeedbackEl) {
                         let statusText = status === 'geldi' ? 'Geldi' : 'Gelmedi';
-                        feedbackEl.textContent = `${student.firstName} - ${statusText} olarak kaydedildi.`;
-                        feedbackEl.classList.add('text-green-600');
-                        feedbackEl.classList.remove('text-red-600');
+                        newFeedbackEl.textContent = `${student.firstName} - ${statusText} olarak kaydedildi.`;
+                        newFeedbackEl.classList.add('text-green-600');
+                        newFeedbackEl.classList.remove('text-red-600');
                     }
-                     setTimeout(() => {
-                        const freshStudent = state.students.find(s => s.id == studentId);
-                        if(freshStudent) showModal(getStudentStatusModalHTML(freshStudent));
-                    }, 1500);
-                } else { 
+                } else { // Telafi için
                     hideModal();
                 }
             } catch (error) {
