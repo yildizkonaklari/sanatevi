@@ -1906,7 +1906,7 @@
             const doc = new jsPDF();
 
             // PDF'e fontu ekle (Script ile yüklenen)
-            doc.setFont('LiberationSans-Regular');
+            doc.setFont('LiberationSans-Regular', 'normal');
 
             const filters = {
                 name: document.getElementById('student-search').value,
@@ -1955,7 +1955,8 @@
                 const course = state.courses.find(c => c.id === filters.courseId);
                 if (course) title = `${course.name} - ${title}`;
             }
-
+            
+            doc.setFont('LiberationSans-Regular', 'normal');
             doc.setFontSize(18);
             doc.text(title, 14, 22);
             doc.setFontSize(11);
@@ -1968,10 +1969,11 @@
                 head: head,
                 body: body,
                 theme: 'striped',
-                headStyles: { fillColor: [41, 128, 185], font: 'LiberationSans-Regular' },
-                styles: { font: 'LiberationSans-Regular' },
+                headStyles: { fillColor: [41, 128, 185], font: 'LiberationSans-Regular', fontStyle: 'normal' },
+                styles: { font: 'LiberationSans-Regular', fontStyle: 'normal' },
                 didDrawPage: function (data) {
                     let str = "Sayfa " + doc.internal.getNumberOfPages();
+                    doc.setFont('LiberationSans-Regular', 'normal');
                     doc.setFontSize(10);
                     let pageSize = doc.internal.pageSize;
                     let pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
@@ -2185,7 +2187,7 @@
             } else {
                 sortedWorkload.forEach(([instructor, count]) => {
                     workloadBody.innerHTML += `
-                        <tr class="border-b">
+                        <tr classDers Programı="border-b">
                             <td class="p-3">${instructor}</td>
                             <td class="p-3">${count}</td>
                         </tr>
