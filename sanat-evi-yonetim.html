@@ -11,6 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <!-- PDF Türkçe Karakter Desteği İçin Font Dosyası -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-customfonts/1.0.4/LiberationSans-Regular-normal.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Custom Stiller ve Animasyonlar */
         body {
@@ -144,6 +146,9 @@
                 </a>
                 <a href="#calendar" class="nav-link flex items-center px-4 py-2 rounded-md hover:bg-gray-700">
                     <i class="fas fa-calendar-alt w-6 text-center sidebar-icon"></i><span class="ml-3">Ders Programı</span>
+                </a>
+                 <a href="#reports" class="nav-link flex items-center px-4 py-2 rounded-md hover:bg-gray-700">
+                    <i class="fas fa-chart-pie w-6 text-center sidebar-icon"></i><span class="ml-3">Raporlar</span>
                 </a>
                  <a href="#how-to-use" class="nav-link flex items-center px-4 py-2 rounded-md hover:bg-gray-700">
                     <i class="fas fa-question-circle w-6 text-center sidebar-icon"></i><span class="ml-3">Nasıl Kullanılır?</span>
@@ -335,6 +340,117 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Sayfa: Raporlar -->
+                <div id="reports-page" class="page">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Raporlama</h1>
+                    
+                    <!-- Finansal Raporlar -->
+                    <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Finansal Raporlar</h2>
+                        <!-- Date Filters -->
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <div>
+                                <label for="report-start-date" class="block text-sm font-medium text-gray-700">Başlangıç Tarihi</label>
+                                <input type="date" id="report-start-date" class="mt-1 p-2 border rounded-md w-full">
+                            </div>
+                            <div>
+                                <label for="report-end-date" class="block text-sm font-medium text-gray-700">Bitiş Tarihi</label>
+                                <input type="date" id="report-end-date" class="mt-1 p-2 border rounded-md w-full">
+                            </div>
+                            <button id="generate-report-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 self-end">Raporu Oluştur</button>
+                        </div>
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-green-100 p-4 rounded-lg">
+                                <p class="text-sm text-green-800">Toplam Gelir (Seçili Aralık)</p>
+                                <p id="report-total-revenue" class="text-3xl font-bold text-green-900">0 ₺</p>
+                            </div>
+                            <div class="bg-red-100 p-4 rounded-lg">
+                                <p class="text-sm text-red-800">Toplam Alacak (Tüm Aktif Öğrenciler)</p>
+                                <p id="report-total-due" class="text-3xl font-bold text-red-900">0 ₺</p>
+                            </div>
+                        </div>
+                        <!-- Revenue by Course Table -->
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">Kursa Göre Gelir Dağılımı (Seçili Aralık)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Kurs</th>
+                                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Toplam Gelir</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-revenue-by-course-body">
+                                    <!-- JS ile doldurulacak -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Öğrenci ve Operasyonel Raporlar -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Öğrenci Raporları -->
+                        <section class="bg-white p-6 rounded-lg shadow-md">
+                            <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Öğrenci Raporları</h2>
+                            <!-- New Students Chart -->
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Aylara Göre Yeni Öğrenci Kayıtları</h3>
+                            <div class="mb-6">
+                                <canvas id="new-students-chart"></canvas>
+                            </div>
+                            <!-- Absenteeism Table -->
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">En Çok Devamsızlık Yapanlar (Tüm Zamanlar)</h3>
+                            <div class="overflow-y-auto max-h-60">
+                                 <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="p-3 text-left text-sm font-semibold text-gray-600">Öğrenci</th>
+                                            <th class="p-3 text-left text-sm font-semibold text-gray-600">Devamsızlık</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="report-absenteeism-body">
+                                        <!-- JS ile doldurulacak -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <!-- Operasyonel Raporlar -->
+                        <section class="bg-white p-6 rounded-lg shadow-md">
+                            <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Operasyonel Raporlar</h2>
+                            <!-- Course Popularity -->
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Kurs Popülerlik Raporu (Aktif Öğrenci)</h3>
+                            <div class="overflow-y-auto max-h-60 mb-6">
+                                 <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="p-3 text-left text-sm font-semibold text-gray-600">Kurs</th>
+                                            <th class="p-3 text-left text-sm font-semibold text-gray-600">Öğrenci Sayısı</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="report-course-popularity-body">
+                                        <!-- JS ile doldurulacak -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Instructor Workload -->
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Eğitmen Ders Yükü (Aktif Öğrenci)</h3>
+                            <div class="overflow-y-auto max-h-60">
+                                 <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="p-3 text-left text-sm font-semibold text-gray-600">Eğitmen</th>
+                                            <th class="p-3 text-left text-sm font-semibold text-gray-600">Öğrenci Sayısı</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="report-instructor-workload-body">
+                                        <!-- JS ile doldurulacak -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </div>
 
                 <!-- Sayfa: Nasıl Kullanılır? -->
                 <div id="how-to-use-page" class="page">
@@ -441,6 +557,7 @@
         };
 
         let viewDate = new Date();
+        let newStudentsChartInstance = null;
         
         // --- DOM ELEMENTLERİ ---
         const pages = document.querySelectorAll('.page');
@@ -541,6 +658,7 @@
                 case 'courses': renderCoursesPage(); break;
                 case 'payments': renderPaymentsPage(); break;
                 case 'calendar': renderCalendar(); break;
+                case 'reports': renderReportsPage(); break;
                 case 'how-to-use': /* Bu sayfa statik olduğu için özel bir render fonksiyonu yok */ break;
             }
         }
@@ -1596,6 +1714,9 @@
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
         document.getElementById('download-pdf-btn').addEventListener('click', handleDownloadPDF);
 
+        // Raporlar Sayfası için Event Listener
+        document.getElementById('generate-report-btn').addEventListener('click', handleGenerateReport);
+
 
         modal.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop') || e.target.id === 'modal') {
@@ -1784,7 +1905,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // PDF'e fontu ekle (Script ile yüklenen Roboto)
+            // PDF'e fontu ekle (Script ile yüklenen)
             doc.setFont('LiberationSans-Regular');
 
             const filters = {
@@ -1859,6 +1980,218 @@
             });
 
             doc.save('kurs_ogrenci_listesi.pdf');
+        }
+
+        // --- Raporlama Fonksiyonları ---
+
+        function renderReportsPage() {
+            // Set default dates (this month)
+            const endDateInput = document.getElementById('report-end-date');
+            const startDateInput = document.getElementById('report-start-date');
+            
+            if (!endDateInput.value) {
+                const today = new Date();
+                endDateInput.valueAsDate = today;
+                
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                startDateInput.valueAsDate = startOfMonth;
+            }
+
+            // Initial report generation
+            handleGenerateReport();
+
+            // Render reports that don't depend on date range
+            renderStudentReports();
+            renderOperationalReports();
+        }
+
+        function handleGenerateReport() {
+            const startDate = document.getElementById('report-start-date').valueAsDate;
+            const endDate = document.getElementById('report-end-date').valueAsDate;
+            
+            if (endDate) {
+                endDate.setHours(23, 59, 59, 999); // Include the whole end day
+            }
+
+            renderFinancialReports(startDate, endDate);
+        }
+
+        function renderFinancialReports(startDate, endDate) {
+            let totalRevenue = 0;
+            let totalDue = 0;
+            const revenueByCourse = {};
+
+            const activeStudents = state.students.filter(s => s.status === 'active');
+
+            activeStudents.forEach(student => {
+                const balance = (student.payments || []).reduce((sum, p) => sum + p.amount, 0);
+                if (balance < 0) {
+                    totalDue += balance;
+                }
+
+                (student.payments || []).forEach(p => {
+                    const paymentDate = new Date(p.date);
+                    if (p.type === 'payment' && paymentDate >= startDate && paymentDate <= endDate) {
+                        totalRevenue += p.amount;
+                        
+                        const course = state.courses.find(c => c.id === student.courseId);
+                        if (course) {
+                            if (!revenueByCourse[course.name]) {
+                                revenueByCourse[course.name] = 0;
+                            }
+                            revenueByCourse[course.name] += p.amount;
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('report-total-revenue').textContent = `${totalRevenue.toFixed(2)} ₺`;
+            document.getElementById('report-total-due').textContent = `${totalDue.toFixed(2)} ₺`;
+
+            const revenueBody = document.getElementById('report-revenue-by-course-body');
+            revenueBody.innerHTML = '';
+            for (const courseName in revenueByCourse) {
+                revenueBody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-3">${courseName}</td>
+                        <td class="p-3">${revenueByCourse[courseName].toFixed(2)} ₺</td>
+                    </tr>
+                `;
+            }
+             if (Object.keys(revenueByCourse).length === 0) {
+                 revenueBody.innerHTML = '<tr><td colspan="2" class="p-3 text-gray-500 text-center">Seçili aralıkta gelir kaydı bulunamadı.</td></tr>';
+            }
+        }
+
+        function renderStudentReports() {
+            // New Students Chart
+            const monthlyData = {};
+            state.students.forEach(s => {
+                const regDate = new Date(s.registrationDate);
+                const monthYear = `${regDate.getFullYear()}-${String(regDate.getMonth() + 1).padStart(2, '0')}`;
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = 0;
+                }
+                monthlyData[monthYear]++;
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const labels = sortedMonths.map(monthYear => {
+                const [year, month] = monthYear.split('-');
+                return new Date(year, month - 1).toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
+            });
+            const data = sortedMonths.map(monthYear => monthlyData[monthYear]);
+
+            const ctx = document.getElementById('new-students-chart').getContext('2d');
+            if (newStudentsChartInstance) {
+                newStudentsChartInstance.destroy();
+            }
+            newStudentsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Yeni Öğrenci Sayısı',
+                        data: data,
+                        backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+            // Absenteeism Report
+            const absenteeismBody = document.getElementById('report-absenteeism-body');
+            absenteeismBody.innerHTML = '';
+            const activeStudents = state.students.filter(s => s.status === 'active');
+            
+            const absentees = activeStudents.map(s => {
+                const absences = (s.attendance || []).filter(a => a.status === 'gelmedi').length;
+                return { name: `${s.firstName} ${s.lastName}`, absences };
+            }).filter(s => s.absences > 0);
+
+            absentees.sort((a, b) => b.absences - a.absences);
+            
+            if(absentees.length === 0){
+                absenteeismBody.innerHTML = '<tr><td colspan="2" class="p-3 text-gray-500 text-center">Devamsızlık kaydı bulunamadı.</td></tr>';
+            } else {
+                absentees.forEach(s => {
+                    absenteeismBody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3">${s.name}</td>
+                            <td class="p-3">${s.absences}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function renderOperationalReports() {
+            // Course Popularity
+            const popularityBody = document.getElementById('report-course-popularity-body');
+            popularityBody.innerHTML = '';
+            const activeStudents = state.students.filter(s => s.status === 'active');
+            
+            const coursePopularity = state.courses.map(course => {
+                const count = activeStudents.filter(s => s.courseId === course.id).length;
+                return { name: course.name, count };
+            });
+
+            coursePopularity.sort((a, b) => b.count - a.count);
+
+            if(coursePopularity.length === 0){
+                popularityBody.innerHTML = '<tr><td colspan="2" class="p-3 text-gray-500 text-center">Kayıtlı kurs bulunamadı.</td></tr>';
+            } else {
+                coursePopularity.forEach(c => {
+                    popularityBody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3">${c.name}</td>
+                            <td class="p-3">${c.count}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Instructor Workload
+            const workloadBody = document.getElementById('report-instructor-workload-body');
+            workloadBody.innerHTML = '';
+            const workload = {};
+
+            activeStudents.forEach(student => {
+                const course = state.courses.find(c => c.id === student.courseId);
+                if (course) {
+                    const instructor = course.instructor;
+                    if (!workload[instructor]) {
+                        workload[instructor] = 0;
+                    }
+                    workload[instructor]++;
+                }
+            });
+
+            const sortedWorkload = Object.entries(workload).sort(([,a],[,b]) => b-a);
+            
+            if(sortedWorkload.length === 0) {
+                 workloadBody.innerHTML = '<tr><td colspan="2" class="p-3 text-gray-500 text-center">Eğitmen kaydı bulunamadı.</td></tr>';
+            } else {
+                sortedWorkload.forEach(([instructor, count]) => {
+                    workloadBody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3">${instructor}</td>
+                            <td class="p-3">${count}</td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
     });
