@@ -9,10 +9,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF Kütüphaneleri -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://raw.githack.com/MrRio/jsPDF/master/examples/fonts/LiberationSans-Regular-normal.js"></script>
+    <!-- jsPDF Kütüphaneleri (Artık Gerekli Değil, ama başka bir yerde kullanılabilir diye bırakıyorum) -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script> -->
+    <!-- <script src="https://raw.githack.com/MrRio/jsPDF/master/examples/fonts/LiberationSans-Regular-normal.js"></script> -->
     <style>
         /* Custom Stiller ve Animasyonlar */
         body {
@@ -1654,7 +1654,16 @@
             const lessonDuration = course.duration || 60;
             const endTime = new Date(startTime.getTime() + lessonDuration * 60 * 1000);
 
-            const toGoogleFormat = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const toGoogleFormat = (date) => {
+                const pad = (num) => (num < 10 ? '0' : '') + num;
+                return date.getFullYear() +
+                       pad(date.getMonth() + 1) +
+                       pad(date.getDate()) +
+                       'T' +
+                       pad(date.getHours()) +
+                       pad(date.getMinutes()) +
+                       '00';
+            };
             
             const startDateGoogle = toGoogleFormat(startTime);
             const endDateGoogle = toGoogleFormat(endTime);
@@ -1673,7 +1682,9 @@
             const printContent = generateStudentInfoHTML(studentId);
             const printArea = document.getElementById('print-area');
             printArea.innerHTML = printContent;
+            printArea.classList.remove('hidden');
             window.print();
+            printArea.classList.add('hidden');
             printArea.innerHTML = '';
         }
 
@@ -1910,12 +1921,7 @@
         }
 
         function handlePrintReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // PDF'e fontu ekle
-            doc.setFont('LiberationSans-Regular');
-
+            // PDF DEĞİL, YAZDIRMA İŞLEVİ
             const filters = {
                 name: document.getElementById('student-search').value,
                 courseId: document.getElementById('student-course-filter').value,
@@ -1947,47 +1953,46 @@
             const dayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
             filteredStudents.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
 
-            const head = [['Eğitmen', 'Öğrenci Adı Soyadı', 'Kurs', 'Ders Günü ve Saati']];
-            const body = filteredStudents.map(student => {
+            const tableBody = filteredStudents.map(student => {
                 const course = state.courses.find(c => c.id === student.courseId);
-                return [
-                    course ? course.instructor : 'N/A',
-                    `${student.firstName} ${student.lastName}`,
-                    course ? course.name : 'N/A',
-                    `${student.day} ${student.time}`
-                ];
-            });
+                return `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 6px;">${course ? course.instructor : 'N/A'}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px;">${student.firstName} ${student.lastName}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px;">${course ? course.name : 'N/A'}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px;">${student.day} ${student.time}</td>
+                    </tr>
+                `;
+            }).join('');
 
             let title = "Öğrenci Ders Raporu";
             if (filters.courseId) {
                 const course = state.courses.find(c => c.id === filters.courseId);
                 if (course) title = `${course.name} - ${title}`;
             }
-
-            doc.setFontSize(18);
-            doc.text(title, 14, 22);
-            doc.setFontSize(11);
-            doc.setTextColor(100);
+            
             const date = new Date().toLocaleDateString('tr-TR');
-            doc.text(`Tarih: ${date}`, 14, 28);
 
-            doc.autoTable({
-                startY: 35,
-                head: head,
-                body: body,
-                theme: 'striped',
-                headStyles: { fillColor: [41, 128, 185], font: 'LiberationSans-Regular' },
-                styles: { font: 'LiberationSans-Regular' },
-                didDrawPage: function (data) {
-                    let str = "Sayfa " + doc.internal.getNumberOfPages();
-                    doc.setFontSize(10);
-                    let pageSize = doc.internal.pageSize;
-                    let pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-                    doc.text(str, data.settings.margin.left, pageHeight - 10);
-                }
+            let html = `<div style="font-family: Arial, sans-serif; padding: 20px;">`;
+            html += `<h1 style="font-size: 18px; text-align: center; margin-bottom: 5px;">${title}</h1>`;
+            html += `<p style="font-size: 11px; text-align: center; margin-bottom: 15px;">Tarih: ${date}</p>`;
+            html += `<table style="width: 100%; border-collapse: collapse; font-size: 10px;">`;
+            html += '<thead><tr>';
+            const head = ['Eğitmen', 'Öğrenci Adı Soyadı', 'Kurs', 'Ders Günü ve Saati'];
+            head.forEach(h => {
+                html += `<th style="border: 1px solid #ddd; padding: 6px; background-color: #f2f2f2; text-align: left;">${h}</th>`;
             });
-
-            doc.save('kurs_ogrenci_listesi.pdf');
+            html += '</tr></thead>';
+            html += '<tbody>';
+            html += tableBody;
+            html += '</tbody></table></div>';
+            
+            const printArea = document.getElementById('print-area');
+            printArea.innerHTML = html;
+            printArea.classList.remove('hidden');
+            window.print();
+            printArea.classList.add('hidden');
+            printArea.innerHTML = '';
         }
 
         // --- Raporlama Fonksiyonları ---
@@ -2195,7 +2200,7 @@
             } else {
                 sortedWorkload.forEach(([instructor, count]) => {
                     workloadBody.innerHTML += `
-                        <tr class="border-b">
+                        <tr classD="border-b">
                             <td class="p-3">${instructor}</td>
                             <td class="p-3">${count}</td>
                         </tr>
