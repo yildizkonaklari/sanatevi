@@ -7,12 +7,12 @@
     <title>Sanat Evi Kurs Yönetim Sistemi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <!-- PDF Türkçe Karakter Desteği İçin Font Dosyası -->
+    <script src="https://raw.githack.com/MrRio/jsPDF/master/examples/fonts/LiberationSans-Regular-normal.js"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF Kütüphaneleri (Artık Gerekli Değil, ama başka bir yerde kullanılabilir diye bırakıyorum) -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script> -->
-    <!-- <script src="https://raw.githack.com/MrRio/jsPDF/master/examples/fonts/LiberationSans-Regular-normal.js"></script> -->
     <style>
         /* Custom Stiller ve Animasyonlar */
         body {
@@ -218,8 +218,8 @@
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Öğrenci Yönetimi</h1>
                         <div class="flex gap-2">
-                             <button id="print-report-btn" class="bg-gray-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-gray-700 flex items-center">
-                                <i class="fas fa-print md:mr-2"></i> <span class="hidden md:inline">Listeyi Yazdır</span>
+                             <button id="download-pdf-btn" class="bg-red-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-red-700 flex items-center">
+                                <i class="fas fa-file-pdf md:mr-2"></i> <span class="hidden md:inline">PDF İndir</span>
                             </button>
                             <button id="add-student-btn" class="bg-indigo-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-indigo-700 flex items-center">
                                 <i class="fas fa-plus md:mr-2"></i> <span class="hidden md:inline">Yeni Öğrenci Ekle</span>
@@ -340,15 +340,10 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Sayfa: Raporlar -->
                 <div id="reports-page" class="page">
-                     <div class="flex justify-between items-center mb-6">
-                        <h1 class="text-3xl font-bold text-gray-800">Raporlama</h1>
-                        <button id="print-reports-page-btn" class="bg-gray-600 text-white p-2 md:px-4 md:py-2 rounded-lg shadow hover:bg-gray-700 flex items-center">
-                            <i class="fas fa-print md:mr-2"></i> <span class="hidden md:inline">Sayfayı Yazdır</span>
-                        </button>
-                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Raporlama</h1>
                     
                     <!-- Finansal Raporlar -->
                     <section class="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -364,6 +359,9 @@
                                 <input type="date" id="report-end-date" class="mt-1 p-2 border rounded-md w-full">
                             </div>
                             <button id="generate-report-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 self-end">Raporu Oluştur</button>
+                            <button id="download-report-pdf-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 self-end flex items-center justify-center">
+                                <i class="fas fa-file-pdf mr-2"></i> PDF İndir
+                            </button>
                         </div>
                         <!-- Summary Cards -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -1728,13 +1726,11 @@
         document.getElementById('payment-status-filter').addEventListener('change', applyPaymentFilters);
 
         document.getElementById('calendar-course-filter').addEventListener('change', renderCalendar);
-        document.getElementById('print-report-btn').addEventListener('click', handlePrintReport);
+        document.getElementById('download-pdf-btn').addEventListener('click', handleDownloadPDF);
 
         // Raporlar Sayfası için Event Listener
         document.getElementById('generate-report-btn').addEventListener('click', handleGenerateReport);
-        document.getElementById('print-reports-page-btn').addEventListener('click', () => {
-             window.print();
-        });
+        document.getElementById('download-report-pdf-btn').addEventListener('click', handleDownloadReportPDF);
 
 
         modal.addEventListener('click', (e) => {
@@ -1920,7 +1916,7 @@
             }
         }
 
-        function handlePrintReport() {
+        function handleDownloadPDF() {
             // PDF DEĞİL, YAZDIRMA İŞLEVİ
             const filters = {
                 name: document.getElementById('student-search').value,
@@ -1993,6 +1989,27 @@
             window.print();
             printArea.classList.add('hidden');
             printArea.innerHTML = '';
+        }
+
+        // --- Raporlama Fonksiyonları ---
+        function handlePrintReportsPage() {
+            const reportPage = document.getElementById('reports-page');
+            if (!reportPage) return;
+
+            // Rapor sayfasını klonla
+            const reportContent = reportPage.cloneNode(true);
+            
+            // Klonlanan içerikten butonları ve gereksiz öğeleri kaldır
+            reportContent.querySelector('button#print-reports-page-btn').remove();
+            const dateFilters = reportContent.querySelector('.flex.flex-col.md\\:flex-row.gap-4.mb-4');
+            if(dateFilters) dateFilters.remove();
+            
+            const printArea = document.getElementById('print-area');
+            printArea.innerHTML = ''; // Önceki içeriği temizle
+            printArea.appendChild(reportContent); // Klonu ekle
+            
+            printArea.classList.remove('hidden');
+            doc.save('kurs_ogrenci_listesi.pdf');
         }
 
         // --- Raporlama Fonksiyonları ---
@@ -2207,6 +2224,79 @@
                     `;
                 });
             }
+        }
+
+        function handleDownloadReportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont('LiberationSans-Regular');
+
+            // 1. Get Title & Dates
+            const startDate = document.getElementById('report-start-date').value;
+            const endDate = document.getElementById('report-end-date').value;
+            doc.setFontSize(18);
+            doc.text("Yönetim Raporu", 14, 22);
+            doc.setFontSize(11);
+            doc.text(`Tarih Aralığı: ${startDate} - ${endDate}`, 14, 28);
+
+            // 2. Get Summary Data
+            const totalRevenue = document.getElementById('report-total-revenue').textContent;
+            const totalDue = document.getElementById('report-total-due').textContent;
+            doc.setFontSize(12);
+            doc.text(`Toplam Gelir (Seçili Aralık): ${totalRevenue}`, 14, 40);
+            doc.text(`Toplam Alacak (Tüm Aktif Öğrenciler): ${totalDue}`, 14, 46);
+
+            // 3. Get Table Data (Helper function to read from table)
+            const getTableData = (tableBodyId) => {
+                const table = document.getElementById(tableBodyId);
+                const body = [];
+                table.querySelectorAll('tr').forEach(tr => {
+                    const row = [];
+                    tr.querySelectorAll('td').forEach(td => row.push(td.textContent));
+                    if(row.length > 0 && !tr.querySelector('.text-gray-500')) { // "Kayıt bulunamadı" satırlarını atla
+                        body.push(row);
+                    }
+                });
+                return body;
+            };
+
+            const tableStyles = {
+                theme: 'striped',
+                headStyles: { fillColor: [41, 128, 185], font: 'LiberationSans-Regular' },
+                styles: { font: 'LiberationSans-Regular' }
+            };
+
+            // 4. Add Tables to PDF
+            doc.autoTable({
+                startY: 55,
+                head: [['Kurs', 'Toplam Gelir']],
+                body: getTableData('report-revenue-by-course-body'),
+                ...tableStyles
+            });
+
+            doc.autoTable({
+                startY: doc.autoTable.previous.finalY + 10,
+                head: [['Öğrenci', 'Devamsızlık']],
+                body: getTableData('report-absenteeism-body'),
+                ...tableStyles
+            });
+            
+            doc.autoTable({
+                startY: doc.autoTable.previous.finalY + 10,
+                head: [['Kurs', 'Öğrenci Sayısı']],
+                body: getTableData('report-course-popularity-body'),
+                ...tableStyles
+            });
+
+            doc.autoTable({
+                startY: doc.autoTable.previous.finalY + 10,
+                head: [['Eğitmen', 'Öğrenci Sayısı']],
+                body: getTableData('report-instructor-workload-body'),
+                ...tableStyles
+            });
+
+            // 5. Save
+            doc.save('yonetim_raporu.pdf');
         }
 
     });
